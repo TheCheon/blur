@@ -24,7 +24,10 @@ local function run_detector_and_get_json(image_path)
   if not f then return nil, 'popen failed' end
   local out = f:read('*a')
   local ok, status, code = f:close()
-  return out
+    if not ok then
+      return nil, string.format('detector failed (status=%s)', tostring(status))
+    end
+    return out
 end
 
 -- Minimal JSON parser to extract simple bbox lists (avoid dependencies)
@@ -67,16 +70,25 @@ local function do_detect_for_selection()
       -- The exact functions vary by Darktable version. To avoid damaging XMP,
       -- we currently call the external writer as fallback:
       -- write JSON to a temp file then call apply_json_to_xmp.py to safely insert masks
-      local tmpjson = os.tmpname()
-      local cmd_json = string.format('"%s" "%s" "%s" --min-conf 0.35 --json-file "%s"', PYTHON_CMD, PYTHON_SCRIPT, path, tmpjson)
-      os.execute(cmd_json)
-      -- call helper to apply JSON into XMP
-      local apply_script = '/home/fickdichweg/#things/VSC/blur/apply_json_to_xmp.py'
-      local cmd_apply = string.format('"%s" "%s" "%s" "%s" --backup-dir "%s"', PYTHON_CMD, apply_script, path, tmpjson, BACKUP_DIR)
-      os.execute(cmd_apply)
-      dt.print('Wrote masks via helper script for '..path)
-      -- remove tmp file if exists
-      os.remove(tmpjson)
+        -- create a safer temp-path ending with .json
+        local tmp = os.tmpname()
+        local tmpjson = tmp .. '.json'
+        local cmd_json = string.format('"%s" "%s" "%s" --min-conf 0.35 --json-file "%s"', PYTHON_CMD, PYTHON_SCRIPT, path, tmpjson)
+        local r = os.execute(cmd_json)
+        if r ~= 0 and r ~= true then
+          dt.print('Failed to generate JSON for '..path)
+        else
+          -- call helper to apply JSON into XMP
+          local apply_script = '/home/fickdichweg/#things/VSC/blur/apply_json_to_xmp.py'
+          local cmd_apply = string.format('"%s" "%s" "%s" "%s" --backup-dir "%s"', PYTHON_CMD, apply_script, path, tmpjson, BACKUP_DIR)
+          local ra = os.execute(cmd_apply)
+          if ra ~= 0 and ra ~= true then
+            dt.print('apply_json_to_xmp failed for '..path)
+          else
+            dt.print('Wrote masks via helper script for '..path)
+          end
+        end
+        pcall(os.remove, tmpjson)
     end
   end
   dt.print(_('Face detection complete; reload images if needed.'))
