@@ -1,0 +1,3 @@
+retinaface
+opencv-python
+numpy

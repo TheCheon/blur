@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+imgs/tmp/*.json
+backups_refs/*.bak.*
+backups_refs/*.xmp.bak.*
+backups_refs/archive.tar.gz
+*.tar.gz
+*.zip
