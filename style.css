@@ -1,0 +1,48 @@
+body { font-family: sans-serif; margin: 0; padding: 0; }
+header { display:flex; align-items:center; justify-content:space-between; padding:12px; background:#222; color:white }
+header h1 { margin:0; font-size:16px }
+/* utility hide class used by tabs */
+.hidden { display: none !important; }
+/* tabs */
+#tabs { display:flex; gap:8px }
+#tabs .tab { background:transparent; color:white; border:1px solid #444; padding:6px 10px; cursor:pointer }
+#tabs .tab.active { background:#fff; color:#222 }
+
+.controls button { margin-left:8px }
+main { display:flex; height: calc(100vh - 60px); }
+#gallery { width:350px; overflow:auto; border-right:1px solid #ddd; padding:8px; display:flex; flex-wrap:wrap; gap:8px }
+.thumb { width:100px; height:80px; object-fit:cover; cursor:pointer; border:1px solid #ccc }
+/* editor: stack canvas and filmstrip vertically so filmstrip fits without scrolling */
+#editor { flex:1; padding:12px; display:flex; flex-direction:column }
+#editor.hidden { display:none }
+#canvasWrap { width:100%; flex:1 1 auto; display:flex; align-items:center; justify-content:center; overflow:auto; min-height:0 }
+#editorCanvas { border:1px solid #aaa; max-width:100%; max-height:100%; display:block }
+#editorToolbar { margin-bottom:8px }
+
+/* filmstrip - hidden by default; visible only inside single-image editor */
+.filmstrip { display:none; }
+
+/* filmstrip only visible in single-image editor and fits without page scroll */
+#editor .filmstrip { display:flex; height:120px; overflow-x:auto; overflow-y:hidden; gap:8px; align-items:center; padding:8px; border-top:1px solid #ddd; box-sizing:border-box; flex:0 0 120px }
+#editor .filmstrip img { height:100px; cursor:pointer; border:2px solid transparent }
+#editor .filmstrip img.active { border-color:#f33 }
+
+/* Batch view styles */
+/* Grid styles used by import/detection/edit */
+.tabSection { display:flex; flex-direction:column; gap:8px; padding:12px }
+#importLanding { display:flex; align-items:center; justify-content:center; height:240px }
+.bigImport { font-size:18px; padding:18px 28px }
+#gallery { display:flex; flex-wrap:wrap; gap:12px }
+#detectionGrid, #editGrid { display:flex; flex-wrap:wrap; gap:12px; overflow:auto; padding:8px }
+.gridItem { width:160px; border:1px solid #ccc; padding:6px; display:flex; flex-direction:column; align-items:center }
+.gridItem img { width:140px; height:100px; object-fit:cover; }
+.gridItem .label { font-size:12px; margin-top:6px }
+.status { font-size:11px; color:#666 }
+
+/* Modal styles for Preferences */
+.modal { position:fixed; left:0; top:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); z-index:1000 }
+.modalContent { background:#fff; padding:16px; border-radius:6px; width:320px; box-shadow:0 6px 18px rgba(0,0,0,0.3) }
+.modalContent h3 { margin-top:0 }
+.modalContent label { display:block; margin:8px 0; font-size:13px }
+.modalContent input { float:right; width:100px }
+.modalActions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px }

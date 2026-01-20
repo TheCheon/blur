@@ -1,3 +1,17 @@
+node_modules/
+dist/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+/.idea/
+.vscode/
+thumbs/
+user-data/
+*.sqlite
+/.env
 .venv/
 __pycache__/
 *.pyc

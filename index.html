@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: file:; connect-src 'self' http://127.0.0.1:5000 ws:; img-src 'self' data: file:;" />
+    <title>Blur Faces</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Blur Faces (black squares)</h1>
+        <div id="tabs">
+          <button class="tab active" data-tab="import">Import</button>
+          <button class="tab" data-tab="detection">Detection</button>
+          <button class="tab" data-tab="edit">Edit</button>
+        </div>
+        <div id="headerControls" class="controls">
+          <button id="prefsBtn">Preferences</button>
+        </div>
+      </header>
+      <main>
+        <section id="import" class="tabSection">
+          <div id="importLanding">
+            <button id="importBtn" class="bigImport">Import Images</button>
+          </div>
+          <div id="gallery"></div>
+        </section>
+        <section id="detection" class="tabSection hidden">
+          <div id="detectionToolbar">
+            <button id="detectAllBtn">Detect All</button>
+            <button id="applyAllBtn">Export All Masks</button>
+            <button id="detectBackBtn">Back</button>
+          </div>
+          <div id="detectionGrid"></div>
+        </section>
+        <section id="edit" class="tabSection hidden">
+          <div id="editToolbar">
+            <button id="editBackBtn">Back</button>
+          </div>
+          <div id="editGrid"></div>
+        </section>
+        <section id="editor" class="hidden">
+          <div id="editorToolbar">
+            <!-- editor toolbar removed for simplified darktable-like UI -->
+          </div>
+          <div id="canvasWrap">
+            <canvas id="editorCanvas"></canvas>
+          </div>
+          <div id="filmstrip" class="filmstrip"></div>
+        </section>
+        <section id="batch" class="hidden">
+          <div id="batchToolbar">
+            <button id="batchBackBtn">Back</button>
+            <button id="detectAllBtn">Detect All</button>
+            <button id="applyAllBtn">Export All Masks</button>
+          </div>
+          <div id="batchGrid"></div>
+        </section>
+      </main>
+      <!-- Preferences Modal -->
+      <div id="prefsModal" class="hidden modal">
+        <div class="modalContent">
+          <h3>Preferences</h3>
+          <label>Max concurrent detections: <input id="prefConcurrency" type="number" min="1" max="16"></label>
+          <label>Thumbnail max size (px): <input id="prefPreviewSize" type="number" min="64" max="1024"></label>
+          <label>Detection max dimension (px): <input id="prefDetectDim" type="number" min="256" max="4096"></label>
+          <label>Request timeout (ms): <input id="prefTimeout" type="number" min="1000" max="300000"></label>
+          <div class="modalActions">
+            <button id="prefsSave">Save</button>
+            <button id="prefsCancel">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>

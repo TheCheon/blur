@@ -1,3 +1,11 @@
-retinaface
 opencv-python
 numpy
+
+# Backend web server and utilities
+flask
+flask-cors
+Pillow
+
+# Note: `retinaface` depends on TensorFlow and may require a Python version
+# compatible with available TensorFlow wheels (e.g. Python 3.8/3.9). If you
+# want to use RetinaFace, install it separately in a compatible environment.
