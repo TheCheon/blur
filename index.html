@@ -9,42 +9,27 @@
   <body>
     <div id="app">
       <header>
-        <h1>Blur Faces (black squares)</h1>
+        <h1>Blur Faces v1.0</h1>
         <div id="tabs">
-          <button class="tab active" data-tab="import">Import</button>
-          <button class="tab" data-tab="detection">Detection</button>
+          <button class="tab active" data-tab="library">Library</button>
           <button class="tab" data-tab="edit">Edit</button>
-          <button class="tab" data-tab="export">Export</button>
         </div>
         <div id="headerControls" class="controls">
           <button id="importBtn" class="headerBtn">Import Images</button>
           <button id="detectAllBtn" class="headerBtn">Detect All</button>
-          <button id="exportBtn" class="headerBtn">Export Images</button>
+          <button id="exportBtn" class="headerBtn">Export All</button>
         </div>
       </header>
       <main>
-        <section id="import" class="tabSection">
-          <div id="importLanding">
-          </div>
-          <div id="gallery"></div>
-        </section>
-        <section id="detection" class="tabSection hidden">
-          <div id="detectionToolbar">
+        <section id="library" class="tabSection">
+          <div id="libraryToolbar">
             <button id="applyAllBtn">Export All Masks</button>
           </div>
-          <div id="detectionGrid"></div>
+          <div id="libraryGrid" class="gridArea"></div>
         </section>
         <section id="edit" class="tabSection hidden">
-          <div id="editToolbar">
-            
-          </div>
-          <div id="editGrid"></div>
+          <div id="editGrid" class="editGridArea"></div>
           <div id="filmstripEdit" class="filmstrip"></div>
-        </section>
-        <section id="export" class="tabSection hidden">
-          <div id="exportLanding">
-          </div>
-          <div id="exportGrid"></div>
         </section>
         <section id="editor" class="hidden">
           <div id="editorToolbar">

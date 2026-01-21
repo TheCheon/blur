@@ -92,56 +92,28 @@ tabButtons.forEach(b => b.addEventListener('click', (e) => {
   try { if (!document.getElementById('editor').classList.contains('hidden') && typeof persistCurrentEdits === 'function') persistCurrentEdits(); } catch (e) {}
   tabButtons.forEach(x => x.classList.remove('active'));
   e.target.classList.add('active');
-  document.getElementById('import').classList.toggle('hidden', t !== 'import');
-  document.getElementById('detection').classList.toggle('hidden', t !== 'detection');
+  document.getElementById('library').classList.toggle('hidden', t !== 'library');
   document.getElementById('edit').classList.toggle('hidden', t !== 'edit');
-  document.getElementById('export').classList.toggle('hidden', t !== 'export');
   // always hide single-image editor when switching tabs so its overlay/filmstrip doesn't persist
   try { const ed = document.getElementById('editor'); if (ed) ed.classList.add('hidden'); } catch (e) {}
   updateTabVisibility(t);
 }));
 
 function updateTabVisibility(activeTab) {
-  // show gallery only on Import tab
-  try { const galleryEl = document.getElementById('gallery'); if (galleryEl) galleryEl.classList.toggle('hidden', activeTab !== 'import'); } catch (e) {}
-  const detectionToolbar = document.getElementById('detectionToolbar');
-  const editToolbar = document.getElementById('editToolbar');
-  // Editor toolbar buttons (in the separate editor section)
-  const editorBack = backBtn;
-  const editorDetect = detectBtn;
-  const editorSave = saveBtn;
-
-  // Default: hide toolbars and editor buttons
-  if (detectionToolbar) detectionToolbar.classList.add('hidden');
-  if (editToolbar) editToolbar.classList.add('hidden');
-  if (editorBack) editorBack.style.display = 'none';
-  if (editorDetect) editorDetect.style.display = 'none';
-  if (editorSave) editorSave.style.display = 'none';
-
+  // show gallery only on Library tab
+  try { const galleryEl = document.getElementById('gallery'); if (galleryEl) galleryEl.classList.toggle('hidden', activeTab !== 'library'); } catch (e) {}
+  const libraryToolbar = document.getElementById('libraryToolbar');
+  
+  // Default: hide toolbars
+  if (libraryToolbar) libraryToolbar.classList.add('hidden');
+  
   // Show only what we need per tab
-  // detection: show only the Detect All button
-  if (activeTab === 'detection') {
-    if (detectionToolbar) detectionToolbar.classList.remove('hidden');
-    const dt = document.getElementById('detectAllBtn'); if (dt) dt.style.display = 'inline-block';
-    const ap = document.getElementById('applyAllBtn'); if (ap) ap.style.display = 'none';
-    const db = document.getElementById('detectBackBtn'); if (db) db.style.display = 'none';
+  if (activeTab === 'library') {
+    if (libraryToolbar) libraryToolbar.classList.remove('hidden');
+    const ap = document.getElementById('applyAllBtn'); if (ap) ap.style.display = 'inline-block';
   } else if (activeTab === 'edit') {
-    // edit tab: show edit toolbar with Export button (create if missing)
-    if (editToolbar) editToolbar.classList.remove('hidden');
+    // edit tab: show edit tab with filmstrip
     let exportBtn = document.getElementById('exportBtn');
-    if (!exportBtn) {
-      exportBtn = document.createElement('button'); exportBtn.id = 'exportBtn'; exportBtn.textContent = 'Export';
-      exportBtn.addEventListener('click', async () => {
-        // reuse batch export logic
-        if (typeof applyAllBtn !== 'undefined' && applyAllBtn) applyAllBtn.click();
-      });
-      editToolbar.appendChild(exportBtn);
-    }
-    exportBtn.style.display = 'inline-block';
-    // hide the edit tab's Back button per user request
-    const editBack = document.getElementById('editBackBtn'); if (editBack) editBack.style.display = 'none';
-    // hide global detect button when on edit tab
-    if (detectBtn) detectBtn.style.display = 'none';
     // build filmstrip for the edit tab so user sees it immediately
     try { buildFilmstrip(current || null, 'filmstripEdit'); } catch (e) {}
     // open single-image editor automatically when entering the Edit tab
@@ -153,8 +125,6 @@ function updateTabVisibility(activeTab) {
         if (pathToOpen) openEditor(pathToOpen, findItemByPath(pathToOpen).boxesOriginal || findItemByPath(pathToOpen).boxes || []);
       }
     } catch (e) {}
-  } else {
-    // import or other: keep detection/edit toolbars hidden
   }
 }
 
@@ -169,7 +139,7 @@ function updateTabButtons() {
 
 // initialize tab visibility state
 updateTabButtons();
-updateTabVisibility('import');
+updateTabVisibility('library');
 
 function ensureItemsFromImages() {
   items = images.map(i => ({ path: i.path, preview: (i.thumbSrc || null), boxes: [], status: 'idle', previewScale: 1 }));
@@ -823,9 +793,8 @@ importBtn.addEventListener('click', async () => {
   }
   if (skipped > 0) alert('Skipped ' + skipped + ' files that do not appear to be images');
   ensureItemsFromImages();
-  buildGrid(detectionGrid);
-  buildGrid(editGrid);
-  const exportGridEl = document.getElementById('exportGrid'); if (exportGridEl) buildGrid(exportGridEl);
+  buildGrid(document.getElementById('libraryGrid'));
+  buildGrid(document.getElementById('editGrid'));
   // finalize progress UI
   impLabel.textContent = `Imported ${images.length} files${skipped?(' — skipped '+skipped):''}`;
   impBar.value = impBar.max;

@@ -75,11 +75,12 @@ main { display:flex; flex-direction:column; align-items:center; justify-content:
 .bigImport { font-size:18px; padding:14px 22px; background:var(--panel-2); color:var(--surface); border-radius:6px; border:1px solid transparent }
 #gallery { display:flex; flex-wrap:wrap; gap:12px }
 .gridArea { display:flex; flex-wrap:wrap; gap:32px; overflow:hidden; padding:32px; align-items:center; justify-content:center; width:100vw; min-height:calc(100vh - 60px); box-sizing:border-box; }
+.editGridArea { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:24px; overflow-y:auto; overflow-x:hidden; padding:32px; width:100vw; height:calc(100vh - 60px - 140px); box-sizing:border-box; align-content:start; }
 .gridItem { width:220px; background:var(--panel-2); border:1px solid var(--secondary); padding:16px; display:flex; flex-direction:column; align-items:center; border-radius:12px; box-shadow:0 2px 16px rgba(0,0,0,0.18); transition:box-shadow 0.2s; }
 .gridItem img { width:200px; height:140px; object-fit:cover; border-radius:8px; box-shadow:0 1px 8px rgba(0,0,0,0.12); }
 .gridItem img { background: var(--panel-1); display:block }
-.gridItem .label { font-size:12px; margin-top:8px; color:var(--surface) }
-.status { font-size:11px; color:var(--muted) }
+.gridItem .label { font-size:12px; margin-top:8px; color:var(--surface); text-align:center; }
+.gridItem .status { font-size:11px; color:var(--muted); margin-top:4px; text-align:center; }
 
 /* Busy overlay when long operations are running */
 .busy::after { content: ' '; position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.45); z-index: 9999 }
