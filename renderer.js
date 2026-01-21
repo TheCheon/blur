@@ -21,6 +21,24 @@ let originalDataUrl = null; // original image without baked masks
 // zoom state
 let zoomScale = 1.0;
 const ZOOM_MIN = 0.1, ZOOM_MAX = 4.0;
+
+// compute the scale that makes the canvas fit inside the canvasWrap viewport
+function computeFitScale() {
+  try {
+    if (!canvas || !canvasWrap) return 1.0;
+    const cw = canvas.width || 1;
+    const ch = canvas.height || 1;
+    const vw = Math.max(1, canvasWrap.clientWidth);
+    const vh = Math.max(1, canvasWrap.clientHeight - 0); // allow filmstrip to overlap
+    // scale so whole canvas fits within viewport
+    const sx = vw / cw;
+    const sy = vh / ch;
+    // prefer the smaller scale so both dimensions fit
+    const fit = Math.min(sx, sy);
+    // don't return absurdly large fit (we still allow zoom-in above 1)
+    return Math.min(Math.max(fit, 0.01), ZOOM_MAX);
+  } catch (e) { return 1.0; }
+}
 // Preferences / resource limits (changeable later via a Preferences UI)
 const PREFS = {
   maxConcurrency: 1,       // number of parallel detect requests
@@ -608,7 +626,16 @@ async function openEditor(path, boxes = null) {
     drawRects();
     // initialize history for this image and filmstrip
     pushHistoryForCurrent();
+    // ensure overlay filmstrip is visible and rebuilt
+    try {
+      const stripEl = document.getElementById('filmstrip');
+      if (stripEl) { stripEl.style.display = 'flex'; stripEl.style.zIndex = '10000'; }
+      // make sure editor container allows the filmstrip to overlap
+      const ed = document.getElementById('editor'); if (ed) ed.style.overflow = 'visible';
+    } catch (e) {}
     buildFilmstrip(current);
+    // set initial zoom to fit the viewport so fully zoomed-out fills the window
+    try { zoomScale = computeFitScale(); canvas.style.transformOrigin = '0 0'; canvas.style.transform = `scale(${zoomScale})`; canvasWrap.scrollLeft = Math.max(0, Math.round((canvas.width * zoomScale - canvasWrap.clientWidth)/2)); canvasWrap.scrollTop = Math.max(0, Math.round((canvas.height * zoomScale - canvasWrap.clientHeight)/2)); } catch (e) {}
   };
   img.src = 'data:image/png;base64,' + b64;
 }
@@ -633,6 +660,8 @@ function buildFilmstrip(activePath, containerId = 'filmstrip') {
   const strip = document.getElementById(containerId);
   if (!strip) return;
   strip.innerHTML = '';
+  // ensure filmstrip container is visible (in case CSS hid it)
+  try { strip.style.display = 'flex'; strip.style.zIndex = '10000'; } catch (e) {}
   for (let i = 0; i < items.length; i++) {
     const it = items[i];
     const thumb = document.createElement('img');
@@ -904,11 +933,19 @@ canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   const delta = e.deltaY;
   const factor = Math.pow(1.001, -delta); // smooth zoom multiplier
-  const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomScale * factor));
+  // enforce a minimum fit-to-window scale so fully zoomed-out image always fits
+  const desired = zoomScale * factor;
+  const fit = computeFitScale();
+  const newScale = Math.max(fit, Math.min(ZOOM_MAX, desired));
   zoomAt(newScale, e.clientX, e.clientY);
 });
 
 function zoomAt(newScale, clientX, clientY) {
+  // ensure we never zoom out smaller than the fit-to-window scale
+  try {
+    const fit = computeFitScale();
+    newScale = Math.max(fit, Math.min(ZOOM_MAX, newScale));
+  } catch (e) {}
   if (!canvasWrap) { zoomScale = newScale; canvas.style.transform = `scale(${zoomScale})`; return; }
   const prev = zoomScale;
   // compute center point in original content coordinates
