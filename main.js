@@ -17,6 +17,8 @@ function createWindow() {
   });
 
   win.loadFile('index.html');
+  // remove default application menu (File/Edit/View...) for a cleaner single-window UI
+  try { win.removeMenu(); } catch (e) {}
 }
 
 console.log('main: starting Electron app');

@@ -14,9 +14,9 @@
           <button class="tab active" data-tab="import">Import</button>
           <button class="tab" data-tab="detection">Detection</button>
           <button class="tab" data-tab="edit">Edit</button>
+          <button class="tab" data-tab="export">Export</button>
         </div>
         <div id="headerControls" class="controls">
-          <button id="prefsBtn">Preferences</button>
         </div>
       </header>
       <main>
@@ -39,6 +39,13 @@
             <button id="editBackBtn">Back</button>
           </div>
           <div id="editGrid"></div>
+          <div id="filmstripEdit" class="filmstrip"></div>
+        </section>
+        <section id="export" class="tabSection hidden">
+          <div id="exportLanding">
+            <button id="exportBtn" class="bigImport">Export Images</button>
+          </div>
+          <div id="exportGrid"></div>
         </section>
         <section id="editor" class="hidden">
           <div id="editorToolbar">
@@ -58,20 +65,7 @@
           <div id="batchGrid"></div>
         </section>
       </main>
-      <!-- Preferences Modal -->
-      <div id="prefsModal" class="hidden modal">
-        <div class="modalContent">
-          <h3>Preferences</h3>
-          <label>Max concurrent detections: <input id="prefConcurrency" type="number" min="1" max="16"></label>
-          <label>Thumbnail max size (px): <input id="prefPreviewSize" type="number" min="64" max="1024"></label>
-          <label>Detection max dimension (px): <input id="prefDetectDim" type="number" min="256" max="4096"></label>
-          <label>Request timeout (ms): <input id="prefTimeout" type="number" min="1000" max="300000"></label>
-          <div class="modalActions">
-            <button id="prefsSave">Save</button>
-            <button id="prefsCancel">Cancel</button>
-          </div>
-        </div>
-      </div>
+      <!-- Preferences removed -->
     </div>
 
     <script src="renderer.js"></script>

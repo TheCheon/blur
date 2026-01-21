@@ -1,70 +1,43 @@
 # Blur Faces
 
-Electron + Flask app to detect faces and apply black-square masks. Frontend is an Electron renderer with a simple canvas editor; backend is a Flask server exposing `/detect`, `/mask`, and `/retina_mask` endpoints.
+Blur Faces is a small desktop app (Electron frontend + Flask backend) that detects faces and applies black-square masks. You can import images, run automatic face detection, adjust or draw masks per-image, and export masked images in batch.
 
-How to run
+Quick Start
 
-1. Create a Python virtualenv and install requirements:
+1) Python backend
+
+Create and activate a virtualenv, install Python deps, and start the backend:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-2. Start the Flask backend (if not run by the Electron main process):
-
-```bash
 python app.py
 ```
 
-3. Run the Electron app:
+The Flask API listens on http://127.0.0.1:5000 and exposes `/detect`, `/mask`, and `/retina_mask`.
 
-```bash
-npx electron .
-```
+2) Electron frontend
 
-Git
-
-This repository was initialized locally. To push to GitHub:
-
-```bash
-git remote add origin <git-URL>
-git push -u origin main
-```
-
-If you want me to create a GitHub repo and push automatically, provide a Personal Access Token (repo scope) and desired repo name/visibility.
-# Blur Faces Electron App
-
-This project is a minimal Electron GUI that lets you import images, detect faces using RetinaFace (Python), and apply black-square masks. You can edit automatic masks (remove or draw your own) per image.
-
-Setup
-
-1. Python backend (recommended to run in your existing `.venv`):
-
-```bash
-python3 -m pip install -r requirements.txt
-python3 app.py
-```
-
-This will start a Flask server on `http://127.0.0.1:5000`.
-
-2. Electron frontend
+Install node deps once, then run the app:
 
 ```bash
 npm install
 npm start
 ```
 
-Usage
+Workflow Overview
 
-- Click `Import Images` to pick images.
-- Click a thumbnail to open the editor.
-- Click `Detect Faces` to run RetinaFace on the image (requires backend running).
-- Click `Apply & Save Masks` to send masks to backend and receive masked image.
-- Click inside an automatic mask to remove it. Click-drag on the canvas to draw your own mask rectangle.
+- Import: pick images to add to the project.
+- Detection: run automatic detection for all images (uses the backend). Progress and ETA are shown.
+- Edit: open an image (filmstrip + canvas), tweak or add masks. Edits persist per-image when switching tabs.
+- Export: choose an output folder and export masked images in batch. The exporter preserves the original format and applies light compression to keep file sizes similar to the originals.
 
-Notes
+Notes & Tips
 
-- The backend uses `retinaface`, `opencv-python`, and `Pillow` — ensure they are installed in your Python environment.
-- The app returns masked images as base64 and displays them in the editor; saving to disk is not implemented but can be added easily.
+- For best detection results install `retinaface` in the Python environment used by the backend (it may require a compatible TensorFlow wheel).
+- Exported JPEGs use sensible quality settings to avoid bloated file sizes; PNG output uses maximal compression (lossless).
+- If the Electron app seems to hang on first run, run `npm install` beforehand to download Electron (the electron binary is large).
+
+If you run into issues, open DevTools in the Electron window (View → Toggle Developer Tools) and check the Console for messages.
+1. Python backend (recommended to run in your existing `.venv`):

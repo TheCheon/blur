@@ -27,16 +27,73 @@ def read_image_from_file_storage(fs):
     data = fs.read()
     arr = np.frombuffer(data, np.uint8)
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-    return img
+    return img, data
+
+
+def encode_jpeg_target(pil_im, target_bytes=None, min_q=30, max_q=95, allow_increase_ratio=1.05):
+    """Encode PIL image to JPEG trying to meet target_bytes using binary search on quality.
+    Returns bytes.
+    If target_bytes is None, returns a high-quality encoding (max_q).
+    """
+    # quick path: no target
+    if target_bytes is None:
+        bio = BytesIO()
+        try:
+            pil_im.save(bio, format='JPEG', quality=max_q, optimize=True, progressive=True)
+        except Exception:
+            pil_im.save(bio, format='JPEG', quality=max_q)
+        return bio.getvalue()
+
+    # clamp target
+    target = int(target_bytes)
+    lo = min_q
+    hi = max_q
+    best = None
+    best_q = lo
+    # binary search for quality that produces size <= target*allow_increase_ratio
+    allowed = int(target * allow_increase_ratio)
+    # try hi first to preserve quality
+    try_q = hi
+    bio = BytesIO()
+    try:
+        pil_im.save(bio, format='JPEG', quality=try_q, optimize=True, progressive=True)
+    except Exception:
+        pil_im.save(bio, format='JPEG', quality=try_q)
+    data = bio.getvalue(); size = len(data)
+    if size <= allowed:
+        return data
+    # otherwise binary search downwards
+    best = data; best_q = try_q
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        bio = BytesIO()
+        try:
+            pil_im.save(bio, format='JPEG', quality=mid, optimize=True, progressive=True)
+        except Exception:
+            pil_im.save(bio, format='JPEG', quality=mid)
+        data_mid = bio.getvalue(); size_mid = len(data_mid)
+        # if fits, try higher quality
+        if size_mid <= allowed:
+            best = data_mid; best_q = mid
+            lo = mid + 1
+        else:
+            # too large, decrease quality
+            hi = mid - 1
+        # track smallest seen
+        if best is None or size_mid < len(best):
+            best = data_mid; best_q = mid
+    # return best we found
+    return best
 
 
 @app.route('/detect', methods=['POST'])
 def detect():
     if 'image' not in request.files:
         return jsonify({'error': 'no image'}), 400
-    img = read_image_from_file_storage(request.files['image'])
-    if img is None:
+    img_res = read_image_from_file_storage(request.files['image'])
+    if not img_res:
         return jsonify({'error': 'invalid image'}), 400
+    img, _raw = img_res
     # RetinaFace expects RGB
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     try:
@@ -56,9 +113,11 @@ def detect():
 def mask():
     if 'image' not in request.files:
         return jsonify({'error': 'no image'}), 400
-    img = read_image_from_file_storage(request.files['image'])
-    if img is None:
+    img_res = read_image_from_file_storage(request.files['image'])
+    if not img_res:
         return jsonify({'error': 'invalid image'}), 400
+    img, raw = img_res
+    orig_size_bytes = len(raw) if raw is not None else None
     boxes = []
     if 'boxes' in request.form:
         import json
@@ -81,23 +140,49 @@ def mask():
     except Exception:
         filename = ''
     ext = ('.' + filename.split('.')[-1].lower()) if '.' in filename else '.png'
-    if ext in ('.jpg', '.jpeg'):
-        encode_ext = '.jpg'
-        params = [int(cv2.IMWRITE_JPEG_QUALITY), 95]
-    elif ext == '.png':
-        encode_ext = '.png'
-        params = []
-    else:
-        encode_ext = '.png'
-        params = []
-    success, buf = cv2.imencode(encode_ext, img, params) if params else cv2.imencode(encode_ext, img)
-    if not success:
-        _, buf = cv2.imencode('.png', img)
+    # Use Pillow to re-encode with sensible settings and try to keep output size similar to original
+    try:
+        from PIL import Image
+        im = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        buf = None
         out_mime = 'image/png'
-    else:
-        out_mime = 'image/jpeg' if encode_ext in ('.jpg', '.jpeg') else 'image/png'
-    b64 = base64.b64encode(buf).decode('ascii')
-    return jsonify({'image': f'data:{out_mime};base64,' + b64})
+        # If image has alpha channel, keep PNG
+        has_alpha = (im.mode in ('LA', 'RGBA') or ('transparency' in im.info))
+        # Determine aggressive target behavior
+        if not has_alpha:
+            # prefer JPEG output to save size — determine a reasonable target
+            # target the original size if available, clamp to sensible max (1.5MB)
+            target = None
+            if orig_size_bytes:
+                target = int(min(orig_size_bytes, 1_500_000))
+            try:
+                buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, allow_increase_ratio=1.0)
+                out_mime = 'image/jpeg'
+            except Exception:
+                bio = BytesIO();
+                try:
+                    im.save(bio, format='JPEG', quality=85, optimize=True)
+                except Exception:
+                    im.save(bio, format='JPEG', quality=85)
+                buf = bio.getvalue(); out_mime = 'image/jpeg'
+        else:
+            # has alpha — fall back to compressed PNG
+            bio = BytesIO(); im.save(bio, format='PNG', optimize=True, compress_level=9); buf = bio.getvalue(); out_mime = 'image/png'
+        b64 = base64.b64encode(buf).decode('ascii')
+        return jsonify({'image': f'data:{out_mime};base64,' + b64})
+    except Exception:
+        # fallback to OpenCV encode
+        if ext in ('.jpg', '.jpeg'):
+            success, buf = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+            out_mime = 'image/jpeg'
+        else:
+            success, buf = cv2.imencode('.png', img, [int(cv2.IMWRITE_PNG_COMPRESSION), 9])
+            out_mime = 'image/png'
+        if not success:
+            _, buf = cv2.imencode('.png', img)
+            out_mime = 'image/png'
+        b64 = base64.b64encode(buf).decode('ascii')
+        return jsonify({'image': f'data:{out_mime};base64,' + b64})
 
 
 @app.route('/retina_mask', methods=['POST'])
@@ -114,10 +199,11 @@ def retina_mask():
 
     if 'image' not in request.files:
         return jsonify({'error': 'no image'}), 400
-    img = read_image_from_file_storage(request.files['image'])
-    if img is None:
+    img_res = read_image_from_file_storage(request.files['image'])
+    if not img_res:
         return jsonify({'error': 'invalid image'}), 400
-
+    img, raw = img_res
+    orig_size_bytes = len(raw) if raw is not None else None
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     try:
         faces = RetinaFace.detect_faces(rgb)
@@ -146,26 +232,35 @@ def retina_mask():
     except Exception:
         filename = ''
     ext = ('.' + filename.split('.')[-1].lower()) if '.' in filename else '.png'
-    if ext in ('.jpg', '.jpeg'):
-        encode_ext = '.jpg'
-        params = [int(cv2.IMWRITE_JPEG_QUALITY), 95]
-    elif ext == '.png':
-        encode_ext = '.png'
-        params = []
-    else:
-        encode_ext = '.png'
-        params = []
     try:
-        success, buf = (cv2.imencode(encode_ext, img, params) if params else cv2.imencode(encode_ext, img))
-        if success:
-            out_mime = 'image/jpeg' if encode_ext in ('.jpg', '.jpeg') else 'image/png'
-            b64 = base64.b64encode(buf).decode('ascii')
-            return jsonify({'image': f'data:{out_mime};base64,' + b64, 'boxes': boxes})
+        from PIL import Image
+        im = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        buf = None; out_mime = 'image/png'
+        # If image has alpha channel, keep PNG
+        has_alpha = (im.mode in ('LA', 'RGBA') or ('transparency' in im.info))
+        if not has_alpha:
+            # prefer JPEG; compute target (clamp to 1.5MB)
+            target = None
+            if orig_size_bytes:
+                target = int(min(orig_size_bytes, 1_500_000))
+            try:
+                buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, allow_increase_ratio=1.0)
+                out_mime = 'image/jpeg'
+            except Exception:
+                bio = BytesIO();
+                try:
+                    im.save(bio, format='JPEG', quality=80, optimize=True)
+                except Exception:
+                    im.save(bio, format='JPEG', quality=80)
+                buf = bio.getvalue(); out_mime = 'image/jpeg'
+        else:
+            bio = BytesIO(); im.save(bio, format='PNG', optimize=True, compress_level=9); buf = bio.getvalue(); out_mime = 'image/png'
+        b64 = base64.b64encode(buf).decode('ascii')
+        return jsonify({'image': f'data:{out_mime};base64,' + b64, 'boxes': boxes})
     except Exception:
-        pass
-    _, buf = cv2.imencode('.png', img)
-    b64 = base64.b64encode(buf).decode('ascii')
-    return jsonify({'image': 'data:image/png;base64,' + b64, 'boxes': boxes})
+        _, buf = cv2.imencode('.png', img)
+        b64 = base64.b64encode(buf).decode('ascii')
+        return jsonify({'image': 'data:image/png;base64,' + b64, 'boxes': boxes})
 
 
 if __name__ == '__main__':
