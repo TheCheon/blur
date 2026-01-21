@@ -1080,6 +1080,28 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {}
 });
 
+// move primary buttons into the header controls area so they're always at top
+function relocateHeaderButtons() {
+  try {
+    const header = document.getElementById('headerControls') || document.querySelector('header .controls');
+    if (!header) return;
+    const ids = ['importBtn', 'detectAllBtn', 'applyAllBtn', 'exportBtn', 'exportBtnTop', 'detectBackBtn', 'editBackBtn'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && header !== el.parentElement) {
+        el.style.marginLeft = '8px';
+        el.style.display = 'inline-block';
+        header.appendChild(el);
+      }
+    });
+    // ensure header controls are visible
+    header.style.display = 'flex'; header.style.alignItems = 'center'; header.style.gap = '8px';
+  } catch (e) { console.warn('relocateHeaderButtons failed', e); }
+}
+
+// relocate on startup
+try { relocateHeaderButtons(); } catch (e) {}
+
 // Keyboard shortcuts: Undo/Redo (Ctrl/Cmd+Z, Ctrl/Cmd+Y)
 document.addEventListener('keydown', (e) => {
   const ctrl = e.ctrlKey || e.metaKey;

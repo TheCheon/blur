@@ -157,11 +157,11 @@ def mask():
         has_alpha = (im.mode in ('LA', 'RGBA') or ('transparency' in im.info))
         # Determine aggressive target behavior
         if not has_alpha:
-            # prefer JPEG output to save size — determine a reasonable target
-            # target the original size if available, clamp to sensible max (1.5MB)
+            # prefer JPEG output to preserve original filesize
+            # target the original size if available (no artificial clamp)
             target = None
             if orig_size_bytes:
-                target = int(min(orig_size_bytes, 1_500_000))
+                target = int(orig_size_bytes)
             try:
                 buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, tol_pct=0.05)
                 out_mime = 'image/jpeg'
@@ -246,10 +246,10 @@ def retina_mask():
         # If image has alpha channel, keep PNG
         has_alpha = (im.mode in ('LA', 'RGBA') or ('transparency' in im.info))
         if not has_alpha:
-            # prefer JPEG; compute target (clamp to 1.5MB)
+            # prefer JPEG; compute target equal to original size when available
             target = None
             if orig_size_bytes:
-                target = int(min(orig_size_bytes, 1_500_000))
+                target = int(orig_size_bytes)
             try:
                 buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, tol_pct=0.05)
                 out_mime = 'image/jpeg'
