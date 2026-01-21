@@ -30,12 +30,13 @@ def read_image_from_file_storage(fs):
     return img, data
 
 
-def encode_jpeg_target(pil_im, target_bytes=None, min_q=30, max_q=95, allow_increase_ratio=1.05):
-    """Encode PIL image to JPEG trying to meet target_bytes using binary search on quality.
-    Returns bytes.
-    If target_bytes is None, returns a high-quality encoding (max_q).
+def encode_jpeg_target(pil_im, target_bytes=None, min_q=30, max_q=95, tol_pct=0.05):
+    """Encode PIL image to JPEG attempting to match target_bytes within tolerance.
+    Uses binary search over quality and returns the best result found.
+    - If target_bytes is None: returns high-quality JPEG at max_q.
+    - tol_pct: acceptable relative tolerance (e.g. 0.05 for ±5%).
     """
-    # quick path: no target
+    # quick path: no target -> high quality
     if target_bytes is None:
         bio = BytesIO()
         try:
@@ -44,26 +45,27 @@ def encode_jpeg_target(pil_im, target_bytes=None, min_q=30, max_q=95, allow_incr
             pil_im.save(bio, format='JPEG', quality=max_q)
         return bio.getvalue()
 
-    # clamp target
     target = int(target_bytes)
-    lo = min_q
-    hi = max_q
-    best = None
-    best_q = lo
-    # binary search for quality that produces size <= target*allow_increase_ratio
-    allowed = int(target * allow_increase_ratio)
-    # try hi first to preserve quality
-    try_q = hi
+    if target <= 0:
+        return encode_jpeg_target(pil_im, None, min_q=min_q, max_q=max_q, tol_pct=tol_pct)
+
+    lower = max(1, int(target * (1.0 - tol_pct)))
+    upper = int(target * (1.0 + tol_pct))
+
+    # try highest quality first and see if it fits within upper bound
     bio = BytesIO()
     try:
-        pil_im.save(bio, format='JPEG', quality=try_q, optimize=True, progressive=True)
+        pil_im.save(bio, format='JPEG', quality=max_q, optimize=True, progressive=True)
     except Exception:
-        pil_im.save(bio, format='JPEG', quality=try_q)
+        pil_im.save(bio, format='JPEG', quality=max_q)
     data = bio.getvalue(); size = len(data)
-    if size <= allowed:
+    if lower <= size <= upper:
         return data
-    # otherwise binary search downwards
-    best = data; best_q = try_q
+
+    # perform binary search over quality to find candidate closest to target
+    lo = min_q; hi = max_q
+    best = data; best_q = max_q; best_diff = abs(size - target)
+
     while lo <= hi:
         mid = (lo + hi) // 2
         bio = BytesIO()
@@ -72,17 +74,22 @@ def encode_jpeg_target(pil_im, target_bytes=None, min_q=30, max_q=95, allow_incr
         except Exception:
             pil_im.save(bio, format='JPEG', quality=mid)
         data_mid = bio.getvalue(); size_mid = len(data_mid)
-        # if fits, try higher quality
-        if size_mid <= allowed:
-            best = data_mid; best_q = mid
-            lo = mid + 1
-        else:
-            # too large, decrease quality
+        diff = abs(size_mid - target)
+        # track best candidate (closest to target)
+        if diff < best_diff:
+            best = data_mid; best_q = mid; best_diff = diff
+            # if within tolerance, we can return early
+            if lower <= size_mid <= upper:
+                return data_mid
+        # adjust binary search direction
+        if size_mid > target:
+            # size too large -> decrease quality
             hi = mid - 1
-        # track smallest seen
-        if best is None or size_mid < len(best):
-            best = data_mid; best_q = mid
-    # return best we found
+        else:
+            # size smaller than target -> increase quality
+            lo = mid + 1
+
+    # final: if best within tolerance window, return it; otherwise return best found
     return best
 
 
@@ -156,7 +163,7 @@ def mask():
             if orig_size_bytes:
                 target = int(min(orig_size_bytes, 1_500_000))
             try:
-                buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, allow_increase_ratio=1.0)
+                buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, tol_pct=0.05)
                 out_mime = 'image/jpeg'
             except Exception:
                 bio = BytesIO();
@@ -244,7 +251,7 @@ def retina_mask():
             if orig_size_bytes:
                 target = int(min(orig_size_bytes, 1_500_000))
             try:
-                buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, allow_increase_ratio=1.0)
+                buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, tol_pct=0.05)
                 out_mime = 'image/jpeg'
             except Exception:
                 bio = BytesIO();
