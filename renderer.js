@@ -39,6 +39,22 @@ function computeFitScale() {
     return Math.min(Math.max(fit, 0.01), ZOOM_MAX);
   } catch (e) { return 1.0; }
 }
+
+function ensureFilmstripVisible() {
+  try {
+    const ids = ['filmstrip', 'filmstripEdit'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.display = 'flex';
+        el.style.zIndex = '10000';
+        el.style.pointerEvents = 'auto';
+      }
+    });
+    const ed = document.getElementById('editor'); if (ed) ed.style.overflow = 'visible';
+    if (canvasWrap) canvasWrap.style.paddingBottom = '160px';
+  } catch (e) { console.warn('ensureFilmstripVisible failed', e); }
+}
 // Preferences / resource limits (changeable later via a Preferences UI)
 const PREFS = {
   maxConcurrency: 1,       // number of parallel detect requests
@@ -626,16 +642,21 @@ async function openEditor(path, boxes = null) {
     drawRects();
     // initialize history for this image and filmstrip
     pushHistoryForCurrent();
-    // ensure overlay filmstrip is visible and rebuilt
-    try {
-      const stripEl = document.getElementById('filmstrip');
-      if (stripEl) { stripEl.style.display = 'flex'; stripEl.style.zIndex = '10000'; }
-      // make sure editor container allows the filmstrip to overlap
-      const ed = document.getElementById('editor'); if (ed) ed.style.overflow = 'visible';
-    } catch (e) {}
-    buildFilmstrip(current);
+    // ensure filmstrip is visible and rebuild after layout so it isn't clipped
+    try { ensureFilmstripVisible(); setTimeout(() => buildFilmstrip(current), 30); } catch (e) { buildFilmstrip(current); }
     // set initial zoom to fit the viewport so fully zoomed-out fills the window
-    try { zoomScale = computeFitScale(); canvas.style.transformOrigin = '0 0'; canvas.style.transform = `scale(${zoomScale})`; canvasWrap.scrollLeft = Math.max(0, Math.round((canvas.width * zoomScale - canvasWrap.clientWidth)/2)); canvasWrap.scrollTop = Math.max(0, Math.round((canvas.height * zoomScale - canvasWrap.clientHeight)/2)); } catch (e) {}
+    try {
+      zoomScale = computeFitScale();
+      canvas.style.transformOrigin = '0 0';
+      canvas.style.transform = `scale(${zoomScale})`;
+      // center content
+      setTimeout(() => {
+        try {
+          canvasWrap.scrollLeft = Math.max(0, Math.round((canvas.width * zoomScale - canvasWrap.clientWidth) / 2));
+          canvasWrap.scrollTop = Math.max(0, Math.round((canvas.height * zoomScale - canvasWrap.clientHeight) / 2));
+        } catch (e) {}
+      }, 20);
+    } catch (e) {}
   };
   img.src = 'data:image/png;base64,' + b64;
 }
@@ -678,6 +699,26 @@ function buildFilmstrip(activePath, containerId = 'filmstrip') {
     strip.appendChild(thumb);
   }
 }
+
+// keep filmstrip visible and recompute fit-scale when window resizes
+window.addEventListener('resize', () => {
+  try {
+    ensureFilmstripVisible();
+    // recompute fit scale and clamp zoom if needed
+    const fit = computeFitScale();
+    if (zoomScale < fit) {
+      zoomScale = fit;
+      canvas.style.transform = `scale(${zoomScale})`;
+      // center
+      if (canvasWrap) {
+        canvasWrap.scrollLeft = Math.max(0, Math.round((canvas.width * zoomScale - canvasWrap.clientWidth) / 2));
+        canvasWrap.scrollTop = Math.max(0, Math.round((canvas.height * zoomScale - canvasWrap.clientHeight) / 2));
+      }
+    }
+    // rebuild filmstrip to ensure layout keeps it shown
+    if (current) setTimeout(() => buildFilmstrip(current), 20);
+  } catch (e) { console.warn('resize handler failed', e); }
+});
 
 function pushHistoryForCurrent() {
   const it = findItemByPath(current);
