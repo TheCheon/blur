@@ -125,6 +125,7 @@ def mask():
         return jsonify({'error': 'invalid image'}), 400
     img, raw = img_res
     orig_size_bytes = len(raw) if raw is not None else None
+    print(f'[mask] original file size: {orig_size_bytes} bytes')
     boxes = []
     if 'boxes' in request.form:
         import json
@@ -162,8 +163,10 @@ def mask():
             target = None
             if orig_size_bytes:
                 target = int(orig_size_bytes)
+            print(f'[mask] targeting {target} bytes with ±5% tolerance')
             try:
                 buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, tol_pct=0.05)
+                print(f'[mask] encoded JPEG: {len(buf)} bytes')
                 out_mime = 'image/jpeg'
             except Exception:
                 bio = BytesIO();
@@ -211,6 +214,7 @@ def retina_mask():
         return jsonify({'error': 'invalid image'}), 400
     img, raw = img_res
     orig_size_bytes = len(raw) if raw is not None else None
+    print(f'[retina_mask] original file size: {orig_size_bytes} bytes')
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     try:
         faces = RetinaFace.detect_faces(rgb)
@@ -250,8 +254,10 @@ def retina_mask():
             target = None
             if orig_size_bytes:
                 target = int(orig_size_bytes)
+            print(f'[retina_mask] targeting {target} bytes with ±5% tolerance')
             try:
                 buf = encode_jpeg_target(im, target_bytes=target, min_q=30, max_q=90, tol_pct=0.05)
+                print(f'[retina_mask] encoded JPEG: {len(buf)} bytes')
                 out_mime = 'image/jpeg'
             except Exception:
                 bio = BytesIO();

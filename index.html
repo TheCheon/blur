@@ -17,18 +17,19 @@
           <button class="tab" data-tab="export">Export</button>
         </div>
         <div id="headerControls" class="controls">
+          <button id="importBtn" class="headerBtn">Import Images</button>
+          <button id="detectAllBtn" class="headerBtn">Detect All</button>
+          <button id="exportBtn" class="headerBtn">Export Images</button>
         </div>
       </header>
       <main>
         <section id="import" class="tabSection">
           <div id="importLanding">
-            <button id="importBtn" class="bigImport">Import Images</button>
           </div>
           <div id="gallery"></div>
         </section>
         <section id="detection" class="tabSection hidden">
           <div id="detectionToolbar">
-            <button id="detectAllBtn" class="bigImport">Detect All</button>
             <button id="applyAllBtn">Export All Masks</button>
           </div>
           <div id="detectionGrid"></div>
@@ -42,7 +43,6 @@
         </section>
         <section id="export" class="tabSection hidden">
           <div id="exportLanding">
-            <button id="exportBtn" class="bigImport">Export Images</button>
           </div>
           <div id="exportGrid"></div>
         </section>
