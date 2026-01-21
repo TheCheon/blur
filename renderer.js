@@ -647,12 +647,10 @@ async function openEditor(path, boxes = null) {
     // set initial zoom to fit the viewport so fully zoomed-out fills the window
     try {
       zoomScale = computeFitScale();
-      canvas.style.transformOrigin = '0 0';
+      canvas.style.transformOrigin = 'center center';
       canvas.style.transform = `scale(${zoomScale})`;
       // center content between top bar and filmstrip
-      setTimeout(() => {
-        try { centerCanvas(); } catch (e) {}
-      }, 40);
+      setTimeout(() => { try { centerCanvas(); } catch (e) {} }, 40);
     } catch (e) {}
   };
   img.src = 'data:image/png;base64,' + b64;
@@ -906,8 +904,8 @@ function drawRects() {
   const img = new Image();
   img.onload = () => {
     canvas.width = img.width; canvas.height = img.height;
-    // apply CSS transform for zooming
-    canvas.style.transformOrigin = '0 0';
+    // apply CSS transform for zooming (center-origin for predictable centering)
+    canvas.style.transformOrigin = 'center center';
     canvas.style.transform = `scale(${zoomScale})`;
     ctx.drawImage(img, 0, 0);
     ctx.fillStyle = 'black';
@@ -1004,15 +1002,17 @@ function centerCanvas() {
     if (!canvas || !canvasWrap) return;
     const film = document.getElementById('filmstrip') || document.getElementById('filmstripEdit');
     const filmH = (film && film.offsetHeight) ? film.offsetHeight + 16 : 0; // allow padding
-    const vw = canvasWrap.clientWidth;
-    const vh = Math.max(0, canvasWrap.clientHeight - filmH);
-    const contentW = canvas.width * zoomScale;
-    const contentH = canvas.height * zoomScale;
-    const scrollLeft = Math.max(0, Math.round((contentW - vw) / 2));
-    const scrollTop = Math.max(0, Math.round((contentH - vh) / 2));
-    // apply after layout
+    // compute centers in viewport coords and adjust scroll so canvas center aligns with visible center
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    const visibleCenterX = wrapRect.left + wrapRect.width / 2;
+    const visibleCenterY = wrapRect.top + (wrapRect.height - filmH) / 2;
+    const canvasCenterX = canvasRect.left + canvasRect.width / 2;
+    const canvasCenterY = canvasRect.top + canvasRect.height / 2;
+    const desiredScrollLeft = Math.max(0, Math.round(canvasWrap.scrollLeft + (canvasCenterX - visibleCenterX)));
+    const desiredScrollTop = Math.max(0, Math.round(canvasWrap.scrollTop + (canvasCenterY - visibleCenterY)));
     setTimeout(() => {
-      try { canvasWrap.scrollLeft = scrollLeft; canvasWrap.scrollTop = scrollTop; } catch (e) {}
+      try { canvasWrap.scrollLeft = desiredScrollLeft; canvasWrap.scrollTop = desiredScrollTop; } catch (e) {}
     }, 10);
   } catch (e) { console.warn('centerCanvas failed', e); }
 }
