@@ -28,14 +28,18 @@ function computeFitScale() {
     if (!canvas || !canvasWrap) return 1.0;
     const cw = canvas.width || 1;
     const ch = canvas.height || 1;
-    const vw = Math.max(1, canvasWrap.clientWidth);
-    const vh = Math.max(1, canvasWrap.clientHeight - 0); // allow filmstrip to overlap
-    // scale so whole canvas fits within viewport
-    const sx = vw / cw;
-    const sy = vh / ch;
-    // prefer the smaller scale so both dimensions fit
+    // determine available viewport inside canvasWrap, accounting for the fixed filmstrip
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    let availW = Math.max(1, wrapRect.width - 32); // small horizontal padding
+    // subtract filmstrip height if present
+    const film = document.getElementById('filmstrip') || document.getElementById('filmstripEdit');
+    const filmH = (film && film.offsetHeight) ? film.offsetHeight + 24 : 0;
+    let availH = Math.max(1, wrapRect.height - filmH - 16); // subtract filmstrip + small padding
+    // compute scale that makes the image fit within available area (contain)
+    const sx = availW / cw;
+    const sy = availH / ch;
     const fit = Math.min(sx, sy);
-    // don't return absurdly large fit (we still allow zoom-in above 1)
+    // clamp to a sensible minimum and maximum
     return Math.min(Math.max(fit, 0.01), ZOOM_MAX);
   } catch (e) { return 1.0; }
 }
