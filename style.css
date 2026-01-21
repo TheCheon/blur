@@ -9,7 +9,7 @@
 	--radius: 6px;
 	--gap: 12px;
 }
-body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin: 0; padding: 0; background:var(--bg); color:var(--surface); }
+body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin: 0; padding: 0; background:var(--bg); color:var(--surface); width:100vw; height:100vh; overflow:hidden; }
 header { display:flex; align-items:center; justify-content:space-between; padding:12px; background:var(--panel-1); color:var(--surface) }
 header h1 { margin:0; font-size:16px; font-weight:600 }
 /* utility hide class used by tabs */
@@ -22,8 +22,8 @@ header h1 { margin:0; font-size:16px; font-weight:600 }
 #tabs .tab.disabled { opacity:0.5; cursor:not-allowed }
 
 .controls button { margin-left:8px }
-main { display:flex; height: calc(100vh - 60px); }
-#gallery { width:350px; overflow:auto; border-right:1px solid var(--secondary); padding:8px; display:flex; flex-wrap:wrap; gap:8px }
+main { display:flex; flex-direction:column; align-items:center; justify-content:center; height: calc(100vh - 60px); width:100vw; overflow:hidden; }
+#gallery { width:100vw; height:100vh; overflow:hidden; padding:0; display:flex; flex-wrap:wrap; gap:32px; align-items:center; justify-content:center; background:var(--bg); border:none; }
 .thumb { width:100px; height:80px; object-fit:cover; cursor:pointer; border:1px solid var(--secondary); border-radius:4px }
 /* editor: stack canvas and filmstrip vertically so filmstrip fits without scrolling */
 #editor { flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; position:relative }
@@ -51,9 +51,9 @@ main { display:flex; height: calc(100vh - 60px); }
 #importLanding { display:flex; align-items:center; justify-content:center; height:240px }
 .bigImport { font-size:18px; padding:14px 22px; background:var(--panel-2); color:var(--surface); border-radius:6px; border:1px solid transparent }
 #gallery { display:flex; flex-wrap:wrap; gap:12px }
-.gridArea { display:flex; flex-wrap:wrap; gap:12px; overflow:auto; padding:8px }
-.gridItem { width:160px; background:var(--panel-2); border:1px solid var(--secondary); padding:8px; display:flex; flex-direction:column; align-items:center; border-radius:6px }
-.gridItem img { width:140px; height:100px; object-fit:cover; border-radius:4px }
+.gridArea { display:flex; flex-wrap:wrap; gap:32px; overflow:hidden; padding:32px; align-items:center; justify-content:center; width:100vw; min-height:calc(100vh - 60px); box-sizing:border-box; }
+.gridItem { width:220px; background:var(--panel-2); border:1px solid var(--secondary); padding:16px; display:flex; flex-direction:column; align-items:center; border-radius:12px; box-shadow:0 2px 16px rgba(0,0,0,0.18); transition:box-shadow 0.2s; }
+.gridItem img { width:200px; height:140px; object-fit:cover; border-radius:8px; box-shadow:0 1px 8px rgba(0,0,0,0.12); }
 .gridItem img { background: var(--panel-1); display:block }
 .gridItem .label { font-size:12px; margin-top:8px; color:var(--surface) }
 .status { font-size:11px; color:var(--muted) }
@@ -64,5 +64,13 @@ main { display:flex; height: calc(100vh - 60px); }
 
 /* prevent page-level scrolling; internal panels handle their own overflow */
 html, body { height: 100%; overflow: hidden; }
-main { overflow: auto; }
+main { overflow: hidden; }
+
+/* Hide all scrollbars everywhere */
+*::-webkit-scrollbar { width: 0 !important; height: 0 !important; background: transparent !important; }
+* { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+*::-webkit-scrollbar-thumb { background: transparent !important; }
+
+/* Filmstrip overlay tweaks for overlap */
+#editor .filmstrip, #edit .filmstrip { z-index: 10; }
 

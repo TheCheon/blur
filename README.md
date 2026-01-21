@@ -1,43 +1,65 @@
-# Blur Faces
 
-Blur Faces is a small desktop app (Electron frontend + Flask backend) that detects faces and applies black-square masks. You can import images, run automatic face detection, adjust or draw masks per-image, and export masked images in batch.
+# Blur Faces v1.0
 
-Quick Start
+**Blur Faces** is a fast, privacy-focused desktop app (Electron + Flask) for batch face anonymization with a Lightroom-style workflow.
 
-1) Python backend
+## Features
+- Import images and view them in a full-window lighttable grid
+- Automatic face detection (RetinaFace, if available)
+- Per-image editor: draw, move, resize, or delete black-square masks
+- Filmstrip navigation and keyboard shortcuts (arrow keys, zoom, undo/redo)
+- Batch export with sensible JPEG/PNG compression (no file bloat)
+- Modern, dark, distraction-free UI
 
-Create and activate a virtualenv, install Python deps, and start the backend:
+## Quick Start
 
+### 1. Install (Linux/macOS/Windows)
+
+```bash
+./install.sh   # or install.bat on Windows
+```
+
+### 2. Run
+
+```bash
+./start.sh     # or start.bat on Windows
+```
+
+### Manual setup (if needed)
+Python backend:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python app.py
 ```
-
-The Flask API listens on http://127.0.0.1:5000 and exposes `/detect`, `/mask`, and `/retina_mask`.
-
-2) Electron frontend
-
-Install node deps once, then run the app:
-
+Electron frontend:
 ```bash
 npm install
 npm start
 ```
 
-Workflow Overview
+## Workflow
+- **Import:** Add images (JPG/PNG/TIFF/etc) to the project. Images are shown in a centered, full-window grid.
+- **Detection:** Run face detection on all images. Progress bar and ETA are shown. Masks are auto-applied.
+- **Edit:** Click an image to open the editor. Use the filmstrip or arrow keys to navigate. Draw, move, resize, or delete masks. Zoom with Ctrl+scroll or +/- keys.
+- **Export:** Choose a folder and export all masked images. Exported files keep original names and are compressed to avoid bloat.
 
-- Import: pick images to add to the project.
-- Detection: run automatic detection for all images (uses the backend). Progress and ETA are shown.
-- Edit: open an image (filmstrip + canvas), tweak or add masks. Edits persist per-image when switching tabs.
-- Export: choose an output folder and export masked images in batch. The exporter preserves the original format and applies light compression to keep file sizes similar to the originals.
+## Tips
+- For best detection, install `retinaface` in your Python environment (may require TensorFlow).
+- Exported JPEGs use adaptive quality to keep file sizes close to original. PNGs use max compression.
+- No session persistence: edits are per-session for privacy and simplicity.
+- No scrollbars: UI is clean and distraction-free.
 
-Notes & Tips
+## Keyboard Shortcuts
+- **Left/Right:** Switch images in editor
+- **Ctrl+Z / Ctrl+Y:** Undo/Redo
+- **Ctrl+Scroll or +/-:** Zoom in/out
 
-- For best detection results install `retinaface` in the Python environment used by the backend (it may require a compatible TensorFlow wheel).
-- Exported JPEGs use sensible quality settings to avoid bloated file sizes; PNG output uses maximal compression (lossless).
-- If the Electron app seems to hang on first run, run `npm install` beforehand to download Electron (the electron binary is large).
+## Troubleshooting
+- If Electron doesn't start, run `npm install` first.
+- If detection fails, check Python dependencies and backend terminal output.
+- Open DevTools (View → Toggle Developer Tools) for logs.
 
-If you run into issues, open DevTools in the Electron window (View → Toggle Developer Tools) and check the Console for messages.
-1. Python backend (recommended to run in your existing `.venv`):
+## License
+MIT

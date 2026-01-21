@@ -20,8 +20,7 @@ let baseDataUrl = null; // current base image shown on canvas (original or maske
 let originalDataUrl = null; // original image without baked masks
 // zoom state
 let zoomScale = 1.0;
-let zoomMinFit = 1.0; // minimum zoom to fit canvas in visible area
-const ZOOM_MAX = 4.0;
+const ZOOM_MIN = 0.1, ZOOM_MAX = 4.0;
 // Preferences / resource limits (changeable later via a Preferences UI)
 const PREFS = {
   maxConcurrency: 1,       // number of parallel detect requests
