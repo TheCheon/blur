@@ -649,13 +649,10 @@ async function openEditor(path, boxes = null) {
       zoomScale = computeFitScale();
       canvas.style.transformOrigin = '0 0';
       canvas.style.transform = `scale(${zoomScale})`;
-      // center content
+      // center content between top bar and filmstrip
       setTimeout(() => {
-        try {
-          canvasWrap.scrollLeft = Math.max(0, Math.round((canvas.width * zoomScale - canvasWrap.clientWidth) / 2));
-          canvasWrap.scrollTop = Math.max(0, Math.round((canvas.height * zoomScale - canvasWrap.clientHeight) / 2));
-        } catch (e) {}
-      }, 20);
+        try { centerCanvas(); } catch (e) {}
+      }, 40);
     } catch (e) {}
   };
   img.src = 'data:image/png;base64,' + b64;
@@ -710,10 +707,7 @@ window.addEventListener('resize', () => {
       zoomScale = fit;
       canvas.style.transform = `scale(${zoomScale})`;
       // center
-      if (canvasWrap) {
-        canvasWrap.scrollLeft = Math.max(0, Math.round((canvas.width * zoomScale - canvasWrap.clientWidth) / 2));
-        canvasWrap.scrollTop = Math.max(0, Math.round((canvas.height * zoomScale - canvasWrap.clientHeight) / 2));
-      }
+      if (canvasWrap) centerCanvas();
     }
     // rebuild filmstrip to ensure layout keeps it shown
     if (current) setTimeout(() => buildFilmstrip(current), 20);
@@ -1002,6 +996,25 @@ function zoomAt(newScale, clientX, clientY) {
   const newScrollTop = Math.max(0, Math.round(centerOriginalY * zoomScale - mouseY));
   // set scroll positions (yield to layout)
   setTimeout(() => { canvasWrap.scrollLeft = newScrollLeft; canvasWrap.scrollTop = newScrollTop; }, 0);
+}
+
+// center the canvas content within canvasWrap, accounting for the fixed filmstrip
+function centerCanvas() {
+  try {
+    if (!canvas || !canvasWrap) return;
+    const film = document.getElementById('filmstrip') || document.getElementById('filmstripEdit');
+    const filmH = (film && film.offsetHeight) ? film.offsetHeight + 16 : 0; // allow padding
+    const vw = canvasWrap.clientWidth;
+    const vh = Math.max(0, canvasWrap.clientHeight - filmH);
+    const contentW = canvas.width * zoomScale;
+    const contentH = canvas.height * zoomScale;
+    const scrollLeft = Math.max(0, Math.round((contentW - vw) / 2));
+    const scrollTop = Math.max(0, Math.round((contentH - vh) / 2));
+    // apply after layout
+    setTimeout(() => {
+      try { canvasWrap.scrollLeft = scrollLeft; canvasWrap.scrollTop = scrollTop; } catch (e) {}
+    }, 10);
+  } catch (e) { console.warn('centerCanvas failed', e); }
 }
 
 function handlePointerUp(e) {
