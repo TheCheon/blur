@@ -1,5 +1,5 @@
 const importBtn = document.getElementById('importBtn');
-const gallery = document.getElementById('gallery');
+const libraryGrid = document.getElementById('libraryGrid');
 const editor = document.getElementById('editor');
 const backBtn = document.getElementById('backBtn');
 const detectBtn = document.getElementById('detectBtn');
@@ -110,7 +110,6 @@ function updateTabVisibility(activeTab) {
   // Show only what we need per tab
   if (activeTab === 'library') {
     if (libraryToolbar) libraryToolbar.classList.remove('hidden');
-    const ap = document.getElementById('applyAllBtn'); if (ap) ap.style.display = 'inline-block';
   } else if (activeTab === 'edit') {
     // edit tab: show edit tab with filmstrip
     let exportBtn = document.getElementById('exportBtn');
@@ -370,7 +369,6 @@ async function applyMasksToDataUrl(dataUrl, boxes, scale = 1) {
 
 // Detection grid actions
 const detectAllBtn = document.getElementById('detectAllBtn');
-const applyAllBtn = document.getElementById('applyAllBtn');
 
 detectAllBtn && detectAllBtn.addEventListener('click', async () => {
   beginOperation('detectAll');
@@ -492,53 +490,6 @@ detectAllBtn && detectAllBtn.addEventListener('click', async () => {
   await Promise.all(workers);
   const dtEl = document.getElementById('detectionProgressLabel'); if (dtEl) dtEl.textContent += ' — finished';
   endOperation('detectAll');
-});
-
-applyAllBtn && applyAllBtn.addEventListener && applyAllBtn.addEventListener('click', async () => {
-  beginOperation('export');
-  const outdir = await window.batchApi.selectDirectory();
-  if (!outdir) { endOperation('export'); return alert('Export cancelled'); }
-
-  // progress UI in edit toolbar
-  const toolbar = document.getElementById('editToolbar');
-  let label = document.getElementById('exportProgressLabel');
-  if (!label) { label = document.createElement('span'); label.id = 'exportProgressLabel'; label.style.marginLeft = '12px'; if (toolbar) toolbar.appendChild(label); }
-  let bar = document.getElementById('exportProgressBar');
-  if (!bar) { bar = document.createElement('progress'); bar.id = 'exportProgressBar'; bar.max = items.length; bar.value = 0; bar.style.marginLeft = '8px'; if (toolbar) toolbar.appendChild(bar); }
-  label.textContent = `0 / ${items.length}`; bar.value = 0;
-
-  let completed = 0; let totalTime = 0;
-  for (let i = 0; i < items.length; i++) {
-    const it = items[i];
-    setItemStatus(it, 'exporting', 'editGrid');
-    const t0 = performance.now();
-    try {
-      const maskBoxes = it.boxesOriginal || it.boxes || [];
-      const res = await window.batchApi.maskFilePath(it.path, maskBoxes, PREFS.requestTimeoutMs);
-      if (!res || !res.ok) { setItemStatus(it, 'error', 'editGrid'); continue; }
-      const json = res.json || {};
-      const dataurl = (json.image || '');
-      const outB64 = dataurl.split(',')[1] || '';
-      // derive extension from mime
-      const mime = (dataurl.split(';')[0] || '').replace('data:', '') || 'image/png';
-      const ext = mime.includes('jpeg') || mime.includes('jpg') ? '.jpg' : '.png';
-      const baseName = it.path.split(/\\|\//).pop().replace(/\.[^.]+$/, '') + '_masked' + ext;
-      const outPath = outdir + '/' + baseName;
-      const writeRes = await window.batchApi.writeFile(outPath, outB64);
-      if (!writeRes || !writeRes.ok) { setItemStatus(it, 'error', 'editGrid'); continue; }
-      setItemStatus(it, 'exported', 'editGrid');
-    } catch (err) {
-      setItemStatus(it, 'error', 'editGrid');
-    } finally {
-      completed++; const t1 = performance.now(); totalTime += (t1 - t0);
-      if (bar) bar.value = completed; if (label) label.textContent = `${completed} / ${items.length}`;
-      // small yield so UI updates
-      await new Promise(r => setTimeout(r, 10));
-    }
-  }
-  if (label) label.textContent = `Exported ${completed} / ${items.length}`;
-  alert('Batch export finished');
-  endOperation('export');
 });
 
 // top-level export button (Export tab landing)
@@ -746,11 +697,25 @@ importBtn.addEventListener('click', async () => {
   const allowed = ['.png', '.jpg', '.jpeg', '.bmp', '.gif', '.webp', '.tif', '.tiff'];
   let skipped = 0;
   // create import progress UI
-  const importToolbar = document.getElementById('importToolbar') || gallery.parentElement;
+  const importToolbar = document.getElementById('libraryToolbar');
   let impLabel = document.getElementById('importProgressLabel');
-  if (!impLabel) { impLabel = document.createElement('span'); impLabel.id = 'importProgressLabel'; impLabel.style.marginLeft = '8px'; importToolbar.insertBefore(impLabel, importToolbar.firstChild); }
+  if (!impLabel) { 
+    impLabel = document.createElement('span'); 
+    impLabel.id = 'importProgressLabel'; 
+    impLabel.style.marginLeft = '8px'; 
+    importToolbar.appendChild(impLabel); 
+  }
   let impBar = document.getElementById('importProgressBar');
-  if (!impBar) { impBar = document.createElement('progress'); impBar.id = 'importProgressBar'; impBar.max = files.length; impBar.value = 0; impBar.style.marginLeft = '8px'; importToolbar.insertBefore(impBar, importToolbar.firstChild); }
+  if (!impBar) { 
+    impBar = document.createElement('progress'); 
+    impBar.id = 'importProgressBar'; 
+    impBar.max = files.length; 
+    impBar.value = 0; 
+    impBar.style.marginLeft = '8px';
+    impBar.style.display = 'inline-block';
+    impBar.style.width = '200px';
+    importToolbar.appendChild(impBar); 
+  }
   impLabel.textContent = `0 / ${files.length}`;
 
   // process sequentially to keep memory low and provide accurate progress
@@ -760,27 +725,7 @@ importBtn.addEventListener('click', async () => {
     const isImg = allowed.some(a => p.toLowerCase().endsWith(a));
     if (!isImg) { skipped++; processed++; impBar.value = processed; impLabel.textContent = `${processed} / ${files.length} (skipped)`; continue; }
     try {
-      // create a downscaled thumb via file:// first
-      let thumbSrc = null;
-      try {
-        thumbSrc = await downscaleFromPath(p, PREFS.previewMaxSize);
-      } catch (err) {
-        // fallback to base64 then downscale
-        try {
-          const b64 = await window.api.readFileBase64(p);
-          if (b64) thumbSrc = await downscaleDataUrl('data:image/png;base64,' + b64, PREFS.previewMaxSize);
-        } catch (e2) { thumbSrc = null; }
-      }
-        if (!thumbSrc) { skipped++; }
-      else {
-        const thumb = document.createElement('img');
-        thumb.className = 'thumb';
-        thumb.src = thumbSrc;
-        thumb.dataset.path = p;
-        // do not open single-image editor when clicking in the import landing/gallery
-        gallery.appendChild(thumb);
-        images.push({ path: p, thumbSrc: thumb.src });
-      }
+      images.push({ path: p, thumbSrc: null });
     } catch (err) {
       skipped++;
     } finally {

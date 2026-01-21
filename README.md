@@ -62,4 +62,4 @@ npm start
 - Open DevTools (View → Toggle Developer Tools) for logs.
 
 ## License
-MIT
+AGPL
