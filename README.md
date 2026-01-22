@@ -9,7 +9,6 @@
 - Per-image editor: draw, move, resize, or delete black-square masks
 - Filmstrip navigation and keyboard shortcuts (arrow keys, zoom, undo/redo)
 - Batch export with sensible JPEG/PNG compression (no file bloat)
-- Modern, dark, distraction-free UI
 
 ## Quick Start
 
@@ -41,15 +40,14 @@ npm start
 
 ## Workflow
 - **Import:** Add images (JPG/PNG/TIFF/etc) to the project. Images are shown in a centered, full-window grid.
-- **Detection:** Run face detection on all images. Progress bar and ETA are shown. Masks are auto-applied.
-- **Edit:** Click an image to open the editor. Use the filmstrip or arrow keys to navigate. Draw, move, resize, or delete masks. Zoom with Ctrl+scroll or +/- keys.
-- **Export:** Choose a folder and export all masked images. Exported files keep original names and are compressed to avoid bloat.
+- **Detection:** Run face detection on all images. Masks are auto-applied.
+- **Edit:** Check for missed faces. Use the filmstrip or arrow keys to navigate. Draw, move, resize, or delete masks. Zoom with Ctrl+scroll or +/- keys.
+- **Export:** Choose a folder and export all masked images. Exported files are sligthly compressed without visible quality changes to avoid bloat.
 
 ## Tips
 - For best detection, install `retinaface` in your Python environment (may require TensorFlow).
-- Exported JPEGs use adaptive quality to keep file sizes close to original. PNGs use max compression.
+- Exported JPEGs use adaptive quality to keep file sizes close to original.
 - No session persistence: edits are per-session for privacy and simplicity.
-- No scrollbars: UI is clean and distraction-free.
 
 ## Keyboard Shortcuts
 - **Left/Right:** Switch images in editor
