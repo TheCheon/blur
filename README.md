@@ -1,4 +1,6 @@
 
+<!-- blur faces readme: basic usage and notes -->
+
 # Blur Faces v1.0
 
 **Blur Faces** is a fast, privacy-focused desktop app (Electron + Flask) for batch face anonymization with a Lightroom-style workflow.

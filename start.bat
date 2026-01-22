@@ -1,5 +1,6 @@
 @echo off
 cd /d "%~dp0"
+rem blur faces starter for windows: activates venv and starts backend + electron
 if exist .venv\Scripts\activate (
   call .venv\Scripts\activate
 )

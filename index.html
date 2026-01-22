@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- blur faces frontend: electron renderer ui for batch masking. comments in lowercase -->
 <html>
   <head>
     <meta charset="utf-8" />
@@ -9,12 +10,16 @@
   <body>
     <div id="app">
       <header>
-        <h1>Blur Faces v1.0</h1>
+        <h1>Blur Faces v1.1</h1>
         <div id="tabs">
           <button class="tab active" data-tab="library">Library</button>
           <button class="tab" data-tab="edit">Edit</button>
         </div>
         <div id="headerControls" class="controls">
+          <label id="stripMetadataLabel" class="headerCheckbox">
+            <input type="checkbox" id="stripMetadataCheckbox" />
+            <span>Strip Metadata</span>
+          </label>
           <button id="importBtn" class="headerBtn">Import Images</button>
           <button id="detectAllBtn" class="headerBtn">Detect All</button>
           <button id="exportBtn" class="headerBtn">Export All</button>

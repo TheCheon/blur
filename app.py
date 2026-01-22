@@ -7,8 +7,31 @@ from io import BytesIO
 from PIL import Image
 from retinaface import RetinaFace
 
+# blur faces backend: flask api that detects faces and returns masked images.
+# comments added in lowercase as requested; these do not affect runtime.
 app = Flask(__name__)
 CORS(app)
+
+
+def strip_image_metadata(pil_image):
+    """Remove all metadata from PIL Image: EXIF, ICC profile, XMP, timestamps, etc.
+    Returns a new PIL Image with no metadata."""
+    try:
+        # Create a new image without any metadata
+        if pil_image.mode == 'RGBA' or pil_image.mode == 'LA':
+            # Preserve alpha channel
+            new_img = Image.new(pil_image.mode, pil_image.size)
+            new_img.putdata(pil_image.getdata())
+        else:
+            # Convert to RGB (no transparency/metadata)
+            rgb_img = pil_image.convert('RGB')
+            new_img = Image.new('RGB', rgb_img.size)
+            new_img.putdata(rgb_img.getdata())
+        return new_img
+    except Exception as e:
+        print(f'[warn] strip_image_metadata failed: {e}; returning original')
+        return pil_image
+
 
 
 @app.route('/')
@@ -148,10 +171,20 @@ def mask():
     except Exception:
         filename = ''
     ext = ('.' + filename.split('.')[-1].lower()) if '.' in filename else '.png'
+    
+    # Check if metadata stripping is requested
+    strip_metadata = request.form.get('strip_metadata', 'false').lower() == 'true'
+    
     # Use Pillow to re-encode with sensible settings and try to keep output size similar to original
     try:
         from PIL import Image
         im = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        
+        # Strip metadata if requested
+        if strip_metadata:
+            print(f'[mask] stripping all metadata')
+            im = strip_image_metadata(im)
+        
         buf = None
         out_mime = 'image/png'
         # If image has alpha channel, keep PNG
@@ -238,14 +271,18 @@ def retina_mask():
         except Exception:
             continue
 
-    try:
-        filename = request.files['image'].filename or ''
-    except Exception:
-        filename = ''
-    ext = ('.' + filename.split('.')[-1].lower()) if '.' in filename else '.png'
+    # Check if metadata stripping is requested
+    strip_metadata = request.form.get('strip_metadata', 'false').lower() == 'true'
+
     try:
         from PIL import Image
         im = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        
+        # Strip metadata if requested
+        if strip_metadata:
+            print(f'[retina_mask] stripping all metadata')
+            im = strip_image_metadata(im)
+        
         buf = None; out_mime = 'image/png'
         # If image has alpha channel, keep PNG
         has_alpha = (im.mode in ('LA', 'RGBA') or ('transparency' in im.info))

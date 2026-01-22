@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")"
+# blur faces starter: runs backend in background and launches electron
 # start backend then start electron app
 if [ -f .venv/bin/activate ]; then
   . .venv/bin/activate

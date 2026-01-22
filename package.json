@@ -2,6 +2,7 @@
   "name": "blur-electron-app",
   "version": "0.1.0",
   "private": true,
+  "_comment": "blur electron app metadata; comment stored here in lowercase",
   "main": "main.js",
   "scripts": {
     "start": "electron ."

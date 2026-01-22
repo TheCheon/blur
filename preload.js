@@ -1,3 +1,4 @@
+// preload bridge: exposes safe ipc helpers to renderer
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
@@ -15,5 +16,5 @@ contextBridge.exposeInMainWorld('fsApi', {
 contextBridge.exposeInMainWorld('batchApi', {
   selectDirectory: () => ipcRenderer.invoke('select-directory'),
   writeFile: (filePath, base64) => ipcRenderer.invoke('write-file', filePath, base64)
-  ,maskFilePath: (p, boxes, timeoutMs) => ipcRenderer.invoke('mask-file', p, boxes, timeoutMs)
+  ,maskFilePath: (p, boxes, timeoutMs, stripMetadata) => ipcRenderer.invoke('mask-file', p, boxes, timeoutMs, stripMetadata)
 });

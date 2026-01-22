@@ -1,3 +1,4 @@
+// renderer: ui logic for gallery, editor, detection and masking
 const importBtn = document.getElementById('importBtn');
 const libraryGrid = document.getElementById('libraryGrid');
 const editor = document.getElementById('editor');
@@ -498,6 +499,11 @@ if (exportBtnTop) exportBtnTop.addEventListener('click', async () => {
   beginOperation('export');
   const outdir = await window.batchApi.selectDirectory();
   if (!outdir) { endOperation('export'); return alert('Export cancelled'); }
+  
+  // Get metadata stripping preference
+  const stripMetadataCheckbox = document.getElementById('stripMetadataCheckbox');
+  const stripMetadata = stripMetadataCheckbox && stripMetadataCheckbox.checked;
+  if (stripMetadata) console.log('[export] metadata stripping enabled');
 
   // progress UI in export landing
   const landing = document.getElementById('exportLanding');
@@ -514,7 +520,7 @@ if (exportBtnTop) exportBtnTop.addEventListener('click', async () => {
     const t0 = performance.now();
     try {
       const maskBoxes = it.boxesOriginal || it.boxes || [];
-      const res = await window.batchApi.maskFilePath(it.path, maskBoxes, PREFS.requestTimeoutMs);
+      const res = await window.batchApi.maskFilePath(it.path, maskBoxes, PREFS.requestTimeoutMs, stripMetadata);
       if (!res || !res.ok) { setItemStatus(it, 'error', 'exportGrid'); continue; }
       const json = res.json || {};
       const dataurl = (json.image || '');

@@ -1,5 +1,6 @@
 @echo off
 cd /d "%~dp0"
+rem blur faces installer for windows: creates virtualenv and installs dependencies (lowercase comment)
 python -m venv .venv
 .venv\Scripts\activate
 pip install --upgrade pip

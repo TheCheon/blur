@@ -1,3 +1,4 @@
+// blur faces electron main: creates window and exposes ipc handlers to renderer
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -195,7 +196,7 @@ ipcMain.handle('make-thumbnail', async (event, filePath, maxDim = 320) => {
   }
 });
 
-ipcMain.handle('mask-file', async (event, filePath, boxes, timeoutMs = 60000) => {
+ipcMain.handle('mask-file', async (event, filePath, boxes, timeoutMs = 60000, stripMetadata = false) => {
   try {
     const stats = fs.statSync(filePath);
     const fileSize = stats.size;
@@ -203,8 +204,9 @@ ipcMain.handle('mask-file', async (event, filePath, boxes, timeoutMs = 60000) =>
     const filename = path.basename(filePath);
     const mime = guessMime(filePath);
     const boxesStr = JSON.stringify(boxes || []);
+    const stripStr = stripMetadata ? 'true' : 'false';
     const pre = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${filename}"\r\nContent-Type: ${mime}\r\n\r\n`);
-    const mid = Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="boxes"\r\n\r\n${boxesStr}\r\n`);
+    const mid = Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="boxes"\r\n\r\n${boxesStr}\r\n--${boundary}\r\nContent-Disposition: form-data; name="strip_metadata"\r\n\r\n${stripStr}\r\n`);
     const post = Buffer.from(`--${boundary}--\r\n`);
     const contentLength = pre.length + fileSize + mid.length + post.length;
 

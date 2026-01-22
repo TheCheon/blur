@@ -3,11 +3,13 @@
 RetinaFace-only face detector and masker.
 
 Usage:
-  python retina_mask.py image1.jpg image2.png --outdir masked --suffix _masked
+    python retina_mask.py image1.jpg image2.png --outdir masked --suffix _masked
 
 This script uses `retinaface` for detection only (no OpenCV fallback).
 It draws opaque black rectangles over detected facial areas and saves PNGs.
 """
+# retina_mask helper: detects faces with retinaface and writes masked pngs
+# comment inserted in lowercase; does not change behavior
 import argparse
 import os
 import sys

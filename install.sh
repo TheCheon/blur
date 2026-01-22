@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")"
+# blur faces installer: creates python venv and installs pip/npm deps
 # Create Python venv
 python3 -m venv .venv
 . .venv/bin/activate
