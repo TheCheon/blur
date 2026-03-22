@@ -1,16 +1,16 @@
 
 <!-- blur faces readme: basic usage and notes -->
 
-# Blur Faces v1.0
+# Blur Faces v1.2
 
-**Blur Faces** is a fast, privacy-focused desktop app (Electron + Flask) for batch face anonymization with a Lightroom-style workflow.
+**Blur Faces** is a privacy-first desktop app (Electron + Flask + RetinaFace) for local batch face anonymization.
 
 ## Features
-- Import images and view them in a full-window lighttable grid
-- Automatic face detection (RetinaFace, if available)
-- Per-image editor: draw, move, resize, or delete black-square masks
-- Filmstrip navigation and keyboard shortcuts (arrow keys, zoom, undo/redo)
-- Batch export with sensible JPEG/PNG compression (no file bloat)
+- Step-by-step workflow: Import -> Detect -> Library/Edit -> Export
+- Automatic RetinaFace detection right after import with progress and logs
+- Click-to-edit library cards for quick mask adjustments
+- Export options: output folder, suffix, forced format, JPEG quality, metadata stripping
+- Fully local processing (images are not uploaded to a cloud service)
 
 ## Quick Start
 
@@ -41,20 +41,21 @@ npm start
 ```
 
 ## Workflow
-- **Import:** Add images (JPG/PNG/TIFF/etc) to the project. Images are shown in a centered, full-window grid.
-- **Detection:** Run face detection on all images. Masks are auto-applied.
-- **Edit:** Check for missed faces. Use the filmstrip or arrow keys to navigate. Draw, move, resize, or delete masks. Zoom with Ctrl+scroll or +/- keys.
-- **Export:** Choose a folder and export all masked images. Exported files are sligthly compressed without visible quality changes to avoid bloat.
+1. **Import:** choose one or many photos.
+2. **Detect:** starts automatically and shows per-image progress.
+3. **Library/Edit (optional):** click any image to open the editor and adjust masks.
+4. **Export:** pick output options and export all files in one run.
 
 ## Tips
 - For best detection, install `retinaface` in your Python environment (may require TensorFlow).
 - Exported JPEGs use adaptive quality to keep file sizes close to original.
 - No session persistence: edits are per-session for privacy and simplicity.
 
-## Keyboard Shortcuts
-- **Left/Right:** Switch images in editor
-- **Ctrl+Z / Ctrl+Y:** Undo/Redo
-- **Ctrl+Scroll or +/-:** Zoom in/out
+## Editor Basics
+- Drag on the image to create a new mask.
+- Drag inside a mask to move it.
+- Press `Delete` (or click **Delete Selected**) to remove a selected mask.
+- Press `Esc` to close the editor.
 
 ## Troubleshooting
 - If Electron doesn't start, run `npm install` first.
