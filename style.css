@@ -1,112 +1,337 @@
-:root{
-	--bg: #1C1C1C;
-	--panel-1: #3D3D3D;
-	--panel-2: #5E5E5E;
-	--secondary: #7F7F7F;
-	--surface: #F7F7F7;
-	--muted: #A0A0A0;
-	--accent: #9AA9FF;
-	--radius: 6px;
-	--gap: 12px;
+:root {
+	--bg: #0d1117;
+	--panel: #111826;
+	--panel-2: #1a2235;
+	--ink: #e7ecf7;
+	--muted: #9ba7bf;
+	--line: #2a3551;
+	--accent: #32d2a6;
+	--accent-2: #2f9ef8;
+	--danger: #ff6d6d;
+	--radius: 12px;
 }
-/* blur faces styles: main ui css */
-body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin: 0; padding: 0; background:var(--bg); color:var(--surface); width:100vw; height:100vh; overflow:hidden; }
-header { display:flex; align-items:center; justify-content:space-between; padding:12px; background:var(--panel-1); color:var(--surface) }
-header h1 { margin:0; font-size:16px; font-weight:600 }
-/* utility hide class used by tabs */
-.hidden { display: none !important; }
-/* tabs */
-#tabs { display:flex; gap:var(--gap) }
-#tabs .tab { background:transparent; color:var(--surface); border:1px solid transparent; padding:8px 12px; cursor:pointer; border-radius:4px; font-weight:600 }
-#tabs .tab:hover { background:var(--panel-2); }
-#tabs .tab.active { background:var(--panel-2); color:var(--surface); border-color:transparent }
-#tabs .tab.disabled { opacity:0.5; cursor:not-allowed }
 
-.controls { display:flex; gap:8px; align-items:center; margin-left:auto; }
-.headerBtn { font-size:13px; padding:8px 12px; background:var(--panel-2); color:var(--surface); border:1px solid var(--secondary); border-radius:4px; cursor:pointer; white-space:nowrap; display:inline-block; min-width:auto; }
-.headerBtn:hover { background:var(--secondary); }
-
-/* Checkbox styling for metadata stripping toggle */
-.headerCheckbox { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--surface); cursor:pointer; user-select:none; }
-.headerCheckbox input[type="checkbox"] { width:16px; height:16px; cursor:pointer; accent-color:var(--accent); }
-.headerCheckbox input[type="checkbox"]:hover { opacity:0.8; }
-
-/* Progress bar and label styling for imports */
-#importProgressBar { display:inline-block; width:200px; height:20px; margin-left:8px; vertical-align:middle; }
-#importProgressLabel { display:inline-block; font-size:12px; color:var(--surface); margin-left:8px; }
-#libraryToolbar { display:flex; align-items:center; gap:8px; padding:8px 12px; }
-
-main { display:flex; flex-direction:column; align-items:center; justify-content:center; height: calc(100vh - 60px); width:100vw; overflow:hidden; }
-#gallery { width:100vw; height:auto; max-height: calc(100vh - 200px); overflow:auto; padding:32px 16px; display:flex; flex-wrap:wrap; gap:32px; align-items:flex-start; justify-content:flex-start; background:var(--bg); border:none; box-sizing:border-box; }
-.thumb { width:100px; height:80px; object-fit:cover; cursor:pointer; border:1px solid var(--secondary); border-radius:4px }
-/* editor: stack canvas and filmstrip vertically so filmstrip fits without scrolling */
-#editor { flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; position:relative }
-#editor.hidden { display:none }
-#canvasWrap { width:100%; flex:1 1 auto; display:flex; align-items:center; justify-content:center; overflow:auto; min-height:0; padding-bottom:140px }
-#editorCanvas { border:1px solid var(--secondary); max-width:100%; max-height:100%; display:block; border-radius:var(--radius); background:var(--panel-1) }
-#editorToolbar { margin-bottom:8px }
-
-/* filmstrip base hidden by default */
-.filmstrip { display:none; }
-
-/* filmstrip for single-image editor (overlay) - fixed so it's not clipped in fullscreen */
-#editor .filmstrip {
-	position: fixed;
-	left: 24px;
-	right: 24px;
-	bottom: 18px;
-	height: 120px;
-	max-width: calc(100% - 48px);
-	overflow-x: auto;
-	overflow-y: hidden;
-	gap: 8px;
-	align-items: center;
-	padding: 10px;
-	border-radius: 10px;
-	background: rgba(20,20,20,0.72);
-	backdrop-filter: blur(6px);
-	box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+* {
 	box-sizing: border-box;
-	white-space: nowrap;
-	display: flex;
-	z-index: 100000 !important;
-	pointer-events: auto;
 }
-/* filmstrip images are inline, fixed height and auto width to avoid expanding layout */
-#editor .filmstrip img { height:100px; width:auto; display:inline-block; cursor:pointer; border-radius:4px; border:2px solid transparent; vertical-align:middle }
 
-/* filmstrip for Edit tab (inline, visible at top of edit section) */
-#edit .filmstrip { display:flex; height:120px; overflow-x:auto; overflow-y:hidden; gap:8px; align-items:center; padding:8px; box-sizing:border-box; white-space:nowrap }
-#edit .filmstrip img { height:100px; width:auto; display:inline-block; cursor:pointer; border-radius:4px; border:2px solid transparent; vertical-align:middle }
-#editor .filmstrip img.active { border-color:var(--accent) }
+html,
+body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	font-family: "Segoe UI", "Noto Sans", sans-serif;
+	color: var(--ink);
+	background: radial-gradient(circle at 20% 0%, #152035 0%, #0d1117 52%, #090d15 100%);
+}
 
-/* Batch view styles */
-/* Grid styles used by import/detection/edit */
-.tabSection { display:flex; flex-direction:column; gap:12px; padding:16px }
-#importLanding { display:flex; align-items:center; justify-content:center; height:240px; z-index:2; }
-.bigImport { font-size:18px; padding:14px 22px; background:var(--panel-2); color:var(--surface); border-radius:6px; border:1px solid transparent }
-#gallery { display:flex; flex-wrap:wrap; gap:12px }
-.gridArea { display:flex; flex-wrap:wrap; gap:32px; overflow:hidden; padding:32px; align-items:center; justify-content:center; width:100vw; min-height:calc(100vh - 60px); box-sizing:border-box; }
-.editGridArea { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:24px; overflow-y:auto; overflow-x:hidden; padding:32px; width:100vw; height:calc(100vh - 60px - 140px); box-sizing:border-box; align-content:start; }
-.gridItem { width:220px; background:var(--panel-2); border:1px solid var(--secondary); padding:16px; display:flex; flex-direction:column; align-items:center; border-radius:12px; box-shadow:0 2px 16px rgba(0,0,0,0.18); transition:box-shadow 0.2s; }
-.gridItem img { width:200px; height:140px; object-fit:cover; border-radius:8px; box-shadow:0 1px 8px rgba(0,0,0,0.12); }
-.gridItem img { background: var(--panel-1); display:block }
-.gridItem .label { font-size:12px; margin-top:8px; color:var(--surface); text-align:center; }
-.gridItem .status { font-size:11px; color:var(--muted); margin-top:4px; text-align:center; }
+.hidden {
+	display: none !important;
+}
 
-/* Busy overlay when long operations are running */
-.busy::after { content: ' '; position: fixed; left:0; top:0; right:0; bottom:0; background: rgba(0,0,0,0.45); z-index: 9999 }
-.busy .busyHint { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--panel-2); color: var(--surface); padding:8px 12px; border-radius:6px; border:1px solid var(--secondary); z-index:10000 }
+.app {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
 
-/* prevent page-level scrolling; internal panels handle their own overflow */
-html, body { height: 100%; overflow: hidden; }
-main { overflow: hidden; }
+.topbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+	gap: 20px;
+	padding: 14px 20px;
+	border-bottom: 1px solid var(--line);
+	background: rgba(10, 16, 30, 0.72);
+	backdrop-filter: blur(8px);
+}
 
-/* Hide all scrollbars everywhere */
-*::-webkit-scrollbar { width: 0 !important; height: 0 !important; background: transparent !important; }
-* { scrollbar-width: none !important; -ms-overflow-style: none !important; }
-*::-webkit-scrollbar-thumb { background: transparent !important; }
+.brandWrap h1 {
+	margin: 0;
+	font-size: 19px;
+}
 
-/* Filmstrip overlay tweaks for overlap */
-#editor .filmstrip, #edit .filmstrip { z-index: 10; }
+.brandWrap p {
+	margin: 2px 0 0;
+	color: var(--muted);
+	font-size: 12px;
+}
+
+.stepNav {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+.stepBtn {
+	border: 1px solid var(--line);
+	background: #121b2d;
+	color: var(--ink);
+	padding: 8px 12px;
+	border-radius: 999px;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.stepBtn:hover {
+	background: #1b2741;
+}
+
+.stepBtn.active {
+	border-color: transparent;
+	background: linear-gradient(120deg, var(--accent), var(--accent-2));
+	color: #071018;
+	font-weight: 700;
+}
+
+.mainLayout {
+	flex: 1;
+	min-height: 0;
+	padding: 16px;
+}
+
+.stepPane {
+	width: 100%;
+	height: 100%;
+}
+
+.panel {
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	border: 1px solid var(--line);
+	background: rgba(17, 24, 38, 0.94);
+	border-radius: var(--radius);
+	padding: 16px;
+}
+
+h2 {
+	margin: 0;
+	font-size: 20px;
+}
+
+.subText {
+	margin: 8px 0 0;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.tips {
+	margin: 14px 0;
+	padding-left: 20px;
+	color: var(--muted);
+	line-height: 1.5;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.primaryBtn,
+.secondaryBtn {
+	border-radius: 10px;
+	font-size: 13px;
+	padding: 9px 14px;
+	cursor: pointer;
+}
+
+.primaryBtn {
+	border: 1px solid transparent;
+	background: linear-gradient(120deg, var(--accent), var(--accent-2));
+	color: #071018;
+	font-weight: 700;
+}
+
+.secondaryBtn {
+	border: 1px solid var(--line);
+	background: #1a2235;
+	color: var(--ink);
+}
+
+.primaryBtn:disabled,
+.secondaryBtn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.mutedText {
+	font-size: 12px;
+	color: var(--muted);
+}
+
+progress {
+	width: 300px;
+	max-width: 100%;
+	height: 14px;
+}
+
+.logBox {
+	margin-top: 12px;
+	border: 1px solid var(--line);
+	background: #0f1728;
+	border-radius: 10px;
+	min-height: 150px;
+	max-height: 320px;
+	overflow: auto;
+	padding: 8px;
+	font-size: 12px;
+	color: #c8d2e8;
+	line-height: 1.45;
+	font-family: "Consolas", "Menlo", monospace;
+}
+
+.libraryHeader {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	align-items: center;
+	margin-bottom: 12px;
+}
+
+.libraryGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 12px;
+}
+
+.imageCard {
+	border: 1px solid var(--line);
+	background: #151e30;
+	border-radius: 12px;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.imageCard img {
+	width: 100%;
+	height: 145px;
+	object-fit: cover;
+	border-radius: 8px;
+	border: 1px solid #26314e;
+	background: #0d1320;
+}
+
+.imageMeta {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.imageName {
+	font-size: 12px;
+	word-break: break-all;
+}
+
+.imageStatus {
+	color: var(--muted);
+	font-size: 11px;
+}
+
+.optionGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 10px;
+	margin: 14px 0;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 12px;
+}
+
+.field input,
+.field select {
+	border-radius: 8px;
+	border: 1px solid var(--line);
+	background: #0f1728;
+	color: var(--ink);
+	padding: 9px 10px;
+}
+
+.checkboxField {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	padding: 8px 10px;
+	font-size: 13px;
+}
+
+.editorModal {
+	position: fixed;
+	inset: 0;
+	background: rgba(3, 6, 11, 0.82);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	z-index: 40;
+}
+
+.editorCard {
+	width: min(1200px, 100%);
+	height: min(90vh, 880px);
+	border-radius: 14px;
+	border: 1px solid var(--line);
+	background: #121b2d;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.editorTop {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.editorTop h3 {
+	margin: 0;
+}
+
+.editorCanvasWrap {
+	flex: 1;
+	min-height: 0;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	background: #0e1524;
+	overflow: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#editorCanvas {
+	background: #000;
+	border-radius: 8px;
+	max-width: 100%;
+	max-height: 100%;
+}
+
+@media (max-width: 900px) {
+	.topbar {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.libraryHeader {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}
 

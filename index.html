@@ -1,5 +1,4 @@
 <!doctype html>
-<!-- blur faces frontend: electron renderer ui for batch masking. comments in lowercase -->
 <html>
   <head>
     <meta charset="utf-8" />
@@ -8,51 +7,143 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div id="app">
-      <header>
-        <h1>Blur Faces v1.1</h1>
-        <div id="tabs">
-          <button class="tab active" data-tab="library">Library</button>
-          <button class="tab" data-tab="edit">Edit</button>
+    <div class="app">
+      <header class="topbar">
+        <div class="brandWrap">
+          <h1>Blur Faces</h1>
+          <p>Local RetinaFace workflow for private face anonymization</p>
         </div>
-        <div id="headerControls" class="controls">
-          <label id="stripMetadataLabel" class="headerCheckbox">
-            <input type="checkbox" id="stripMetadataCheckbox" />
-            <span>Strip Metadata</span>
-          </label>
-          <button id="importBtn" class="headerBtn">Import Images</button>
-          <button id="detectAllBtn" class="headerBtn">Detect All</button>
-          <button id="exportBtn" class="headerBtn">Export All</button>
+        <div id="stepNav" class="stepNav" role="tablist" aria-label="Workflow Steps">
+          <button class="stepBtn active" data-step="import" role="tab" aria-selected="true">1. Import</button>
+          <button class="stepBtn" data-step="detect" role="tab" aria-selected="false">2. Detect</button>
+          <button class="stepBtn" data-step="library" role="tab" aria-selected="false">3. Library</button>
+          <button class="stepBtn" data-step="export" role="tab" aria-selected="false">4. Export</button>
         </div>
       </header>
-      <main>
-        <section id="library" class="tabSection">
-          <div id="libraryToolbar">
+
+      <main class="mainLayout">
+        <section id="step-import" class="stepPane">
+          <div class="panel importPanel">
+            <h2>Step 1: Import Photos</h2>
+            <p class="subText">Choose your files. The app keeps processing local only.</p>
+            <ol class="tips">
+              <li>Click import and select one or many images.</li>
+              <li>After import, detection starts automatically.</li>
+              <li>You can edit masks later in the library step or skip that step.</li>
+            </ol>
+            <div class="row">
+              <button id="importBtn" class="primaryBtn">Import Photos</button>
+              <span id="importSummary" class="mutedText">No images imported yet.</span>
+            </div>
+            <div class="row">
+              <progress id="importProgress" value="0" max="1"></progress>
+              <span id="importProgressLabel" class="mutedText"></span>
+            </div>
           </div>
-          <div id="libraryGrid" class="gridArea"></div>
         </section>
-        <section id="edit" class="tabSection hidden">
-          <div id="editGrid" class="editGridArea"></div>
-          <div id="filmstripEdit" class="filmstrip"></div>
+
+        <section id="step-detect" class="stepPane hidden">
+          <div class="panel detectPanel">
+            <h2>Step 2: Face Detection</h2>
+            <p class="subText">Detection runs automatically after import. You can re-run it if needed.</p>
+            <div class="row">
+              <button id="detectNowBtn" class="secondaryBtn">Run Detection Again</button>
+              <span id="detectSummary" class="mutedText">Waiting for images...</span>
+            </div>
+            <div class="row">
+              <progress id="detectProgress" value="0" max="1"></progress>
+              <span id="detectProgressLabel" class="mutedText"></span>
+            </div>
+            <div id="detectLog" class="logBox" aria-live="polite"></div>
+          </div>
         </section>
-        <section id="editor" class="hidden">
-          <div id="editorToolbar">
-            <!-- editor toolbar removed for simplified darktable-like UI -->
+
+        <section id="step-library" class="stepPane hidden">
+          <div class="panel libraryPanel">
+            <div class="libraryHeader">
+              <div>
+                <h2>Step 3: Library (Optional Edit)</h2>
+                <p class="subText">Click any image to edit masks. You can skip this and export immediately.</p>
+              </div>
+              <button id="toExportBtn" class="primaryBtn">Continue to Export</button>
+            </div>
+            <div id="libraryGrid" class="libraryGrid"></div>
           </div>
-          <div id="canvasWrap">
-            <canvas id="editorCanvas"></canvas>
-          </div>
-          <div id="filmstrip" class="filmstrip"></div>
         </section>
-        <section id="batch" class="hidden">
-          <div id="batchToolbar">
-            
-            
+
+        <section id="step-export" class="stepPane hidden">
+          <div class="panel exportPanel">
+            <h2>Step 4: Export</h2>
+            <p class="subText">Choose output options and export all masked images in one pass.</p>
+
+            <div class="optionGrid">
+              <label class="field">
+                <span>Output Folder</span>
+                <div class="row">
+                  <input id="outputDirInput" type="text" readonly placeholder="No folder selected" />
+                  <button id="chooseDirBtn" class="secondaryBtn">Choose</button>
+                </div>
+              </label>
+
+              <label class="field">
+                <span>Filename Suffix</span>
+                <input id="suffixInput" type="text" value="_masked" />
+              </label>
+
+              <label class="field">
+                <span>Output Format</span>
+                <select id="formatSelect">
+                  <option value="keep">Keep backend output</option>
+                  <option value="jpg">Force JPEG</option>
+                  <option value="png">Force PNG</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>JPEG Quality (<span id="jpegQualityLabel">90</span>)</span>
+                <input id="jpegQualityInput" type="range" min="60" max="100" value="90" />
+              </label>
+
+              <label class="checkboxField">
+                <input id="stripMetadataCheckbox" type="checkbox" checked />
+                <span>Strip metadata for privacy</span>
+              </label>
+            </div>
+
+            <div class="row">
+              <button id="exportBtn" class="primaryBtn">Export All</button>
+              <span id="exportSummary" class="mutedText">Ready to export.</span>
+            </div>
+
+            <div class="row">
+              <progress id="exportProgress" value="0" max="1"></progress>
+              <span id="exportProgressLabel" class="mutedText"></span>
+            </div>
+
+            <div id="exportLog" class="logBox" aria-live="polite"></div>
           </div>
-          <div id="batchGrid"></div>
         </section>
       </main>
-      <!-- Preferences removed -->
+
+      <div id="editorModal" class="editorModal hidden" role="dialog" aria-modal="true" aria-label="Image editor">
+        <div class="editorCard">
+          <div class="editorTop">
+            <div>
+              <h3 id="editorTitle">Editor</h3>
+              <p class="subText">Draw, move, and remove masks.</p>
+            </div>
+            <div class="row">
+              <button id="deleteMaskBtn" class="secondaryBtn">Delete Selected</button>
+              <button id="resetMasksBtn" class="secondaryBtn">Reset</button>
+              <button id="cancelEditBtn" class="secondaryBtn">Cancel</button>
+              <button id="saveEditBtn" class="primaryBtn">Save</button>
+            </div>
+          </div>
+          <div id="editorCanvasWrap" class="editorCanvasWrap">
+            <canvas id="editorCanvas"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="renderer.js"></script>
