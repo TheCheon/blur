@@ -1,13 +1,59 @@
 {
   "name": "blur-electron-app",
-  "version": "0.1.0",
+  "version": "1.1.0",
+  "description": "Local RetinaFace workflow for private face anonymization",
+  "author": {
+    "name": "TheCheon",
+    "email": "noreply@users.noreply.github.com"
+  },
   "private": true,
   "_comment": "blur electron app metadata; comment stored here in lowercase",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist:linux": "electron-builder --linux AppImage deb",
+    "dist:win": "electron-builder --win nsis portable",
+    "dist:mac": "electron-builder --mac dmg zip",
+    "dist:all": "electron-builder --linux AppImage deb --win nsis portable --mac dmg zip"
   },
   "devDependencies": {
-    "electron": "^25.9.8"
+    "electron": "^25.9.8",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.thecheon.blur",
+    "productName": "Blur Faces",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "index.html",
+      "renderer.js",
+      "main.js",
+      "preload.js",
+      "style.css",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.utilities"
+    }
   }
 }

@@ -13,7 +13,8 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: process.platform !== 'linux'
     }
   });
 
@@ -196,7 +197,7 @@ ipcMain.handle('make-thumbnail', async (event, filePath, maxDim = 320) => {
   }
 });
 
-ipcMain.handle('mask-file', async (event, filePath, boxes, timeoutMs = 60000, stripMetadata = false) => {
+ipcMain.handle('mask-file', async (event, filePath, boxes, timeoutMs = 60000, stripMetadata = false, jpegQuality = 100) => {
   try {
     const stats = fs.statSync(filePath);
     const fileSize = stats.size;
@@ -205,8 +206,9 @@ ipcMain.handle('mask-file', async (event, filePath, boxes, timeoutMs = 60000, st
     const mime = guessMime(filePath);
     const boxesStr = JSON.stringify(boxes || []);
     const stripStr = stripMetadata ? 'true' : 'false';
+    const jpegQualityStr = String(Math.max(1, Math.min(100, Number(jpegQuality) || 100)));
     const pre = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${filename}"\r\nContent-Type: ${mime}\r\n\r\n`);
-    const mid = Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="boxes"\r\n\r\n${boxesStr}\r\n--${boundary}\r\nContent-Disposition: form-data; name="strip_metadata"\r\n\r\n${stripStr}\r\n`);
+    const mid = Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="boxes"\r\n\r\n${boxesStr}\r\n--${boundary}\r\nContent-Disposition: form-data; name="strip_metadata"\r\n\r\n${stripStr}\r\n--${boundary}\r\nContent-Disposition: form-data; name="jpeg_quality"\r\n\r\n${jpegQualityStr}\r\n`);
     const post = Buffer.from(`--${boundary}--\r\n`);
     const contentLength = pre.length + fileSize + mid.length + post.length;
 
@@ -281,6 +283,88 @@ ipcMain.handle('write-file', async (event, filePath, base64Data) => {
     const buf = Buffer.from(base64Data, 'base64');
     fs.writeFileSync(filePath, buf);
     return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+// Persist app state to a JSON file in userData
+ipcMain.handle('save-app-state', async (event, stateObj) => {
+  try {
+    const p = path.join(app.getPath('userData'), 'app_state.json');
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, JSON.stringify(stateObj, null, 2), 'utf8');
+    return { ok: true, path: p };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+ipcMain.handle('load-app-state', async () => {
+  try {
+    const p = path.join(app.getPath('userData'), 'app_state.json');
+    if (!fs.existsSync(p)) return { ok: true, state: null };
+    const raw = fs.readFileSync(p, 'utf8');
+    const parsed = JSON.parse(raw);
+    return { ok: true, state: parsed };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+// Session management: persist sessions to dedicated directory
+function getSessionsDir() {
+  return path.join(app.getPath('userData'), 'sessions');
+}
+
+ipcMain.handle('list-sessions', async () => {
+  try {
+    const dir = getSessionsDir();
+    if (!fs.existsSync(dir)) return { ok: true, sessions: [] };
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
+    const sessions = files.map((f) => {
+      const p = path.join(dir, f);
+      const stat = fs.statSync(p);
+      return { name: f.replace(/\.json$/, ''), modified: stat.mtimeMs, size: stat.size };
+    }).sort((a, b) => b.modified - a.modified);
+    return { ok: true, sessions };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+ipcMain.handle('delete-session', async (event, sessionName) => {
+  try {
+    const dir = getSessionsDir();
+    const p = path.join(dir, sessionName + '.json');
+    if (!fs.existsSync(p)) return { ok: false, error: 'session not found' };
+    fs.unlinkSync(p);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+ipcMain.handle('load-session', async (event, sessionName) => {
+  try {
+    const dir = getSessionsDir();
+    const p = path.join(dir, sessionName + '.json');
+    if (!fs.existsSync(p)) return { ok: false, error: 'session not found' };
+    const raw = fs.readFileSync(p, 'utf8');
+    const parsed = JSON.parse(raw);
+    return { ok: true, state: parsed };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+ipcMain.handle('save-session-as', async (event, sessionName, stateObj) => {
+  try {
+    const dir = getSessionsDir();
+    fs.mkdirSync(dir, { recursive: true });
+    const p = path.join(dir, sessionName + '.json');
+    fs.writeFileSync(p, JSON.stringify(stateObj, null, 2), 'utf8');
+    return { ok: true, path: p };
   } catch (err) {
     return { ok: false, error: String(err) };
   }

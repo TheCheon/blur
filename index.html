@@ -13,6 +13,13 @@
           <h1>Blur Faces</h1>
           <p>Local RetinaFace workflow for private face anonymization</p>
         </div>
+        <div class="themeSelector" role="group" aria-label="Theme selection">
+          <button class="themeBtn active" data-theme-option="dark-modern" title="Dark Modern theme" aria-label="Dark Modern theme">◐</button>
+          <button class="themeBtn" data-theme-option="vintage-pink-cherry" title="Vintage Pink Cherry theme" aria-label="Vintage Pink Cherry theme">🌸</button>
+          <button class="themeBtn" data-theme-option="light-minimal" title="Light Minimal theme" aria-label="Light Minimal theme">☀</button>
+          <button class="themeBtn" data-theme-option="high-contrast" title="High Contrast theme" aria-label="High Contrast theme">◆</button>
+        </div>
+        <button id="sessionsBtn" class="secondaryBtn" title="Manage sessions">Sessions</button>
         <div id="stepNav" class="stepNav" role="tablist" aria-label="Workflow Steps">
           <button class="stepBtn active" data-step="import" role="tab" aria-selected="true">1. Import</button>
           <button class="stepBtn" data-step="detect" role="tab" aria-selected="false">2. Detect</button>
@@ -80,7 +87,7 @@
               <label class="field">
                 <span>Output Folder</span>
                 <div class="row">
-                  <input id="outputDirInput" type="text" readonly placeholder="No folder selected" />
+                  <input id="outputDirInput" type="text" placeholder="No folder selected" />
                   <button id="chooseDirBtn" class="secondaryBtn">Choose</button>
                 </div>
               </label>
@@ -101,7 +108,7 @@
 
               <label class="field">
                 <span>JPEG Quality (<span id="jpegQualityLabel">90</span>)</span>
-                <input id="jpegQualityInput" type="range" min="60" max="100" value="90" />
+                <input id="jpegQualityInput" type="range" min="1" max="100" value="100" step="1" />
               </label>
 
               <label class="checkboxField">
@@ -142,6 +149,23 @@
           <div id="editorCanvasWrap" class="editorCanvasWrap">
             <canvas id="editorCanvas"></canvas>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sessions Manager Modal -->
+    <div id="sessionsModal" class="modal hidden">
+      <div class="modalContent">
+        <div class="modalHeader">
+          <h2>Sessions</h2>
+          <button class="closeBtn" aria-label="Close">&times;</button>
+        </div>
+        <div class="modalBody">
+          <div class="sessionControls">
+            <input id="sessionNameInput" type="text" placeholder="New session name..." />
+            <button id="saveSessionBtn" class="secondaryBtn">Save Current As...</button>
+          </div>
+          <div id="sessionsList" class="sessionsList"></div>
         </div>
       </div>
     </div>

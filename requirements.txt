@@ -1,12 +1,23 @@
 # blur faces python requirements
-opencv-python
-numpy
-retinaface
 
-# backend web server and utilities
-flask
-flask-cors
-Pillow
+# core computer vision and ML
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
 
-# note: retinaface depends on tensorflow and may require a compatible python
-# version; install retinaface separately if needed
+# face detection
+retinaface>=0.0.13
+
+# backend web server
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# GPU acceleration for AMD GPUs (ROCm) - tensorflow-rocm
+# For CPU-only: use tensorflow>=2.13.0
+# For GPU on Linux with AMD 5700XT:
+#   pip install tensorflow-rocm
+# On first run, the model will be downloaded
+tensorflow-rocm>=2.13.0
+
+# utilities
+python-dotenv>=1.0.0
