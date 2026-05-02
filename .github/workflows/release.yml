@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: write
 
@@ -17,11 +20,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            cmd: npm run dist:linux
+            cmd: npm run dist:linux -- --publish never
           - os: windows-latest
-            cmd: npm run dist:win
+            cmd: npm run dist:win -- --publish never
           - os: macos-latest
-            cmd: npm run dist:mac
+            cmd: npm run dist:mac -- --publish never
 
     steps:
       - name: Checkout
@@ -30,7 +33,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -44,6 +47,7 @@ jobs:
         with:
           name: release-${{ matrix.os }}
           path: release/**
+          if-no-files-found: error
 
   publish:
     name: Publish GitHub Release
