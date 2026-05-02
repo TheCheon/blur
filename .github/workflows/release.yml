@@ -60,9 +60,17 @@ jobs:
           path: all-artifacts
 
       - name: Publish release assets
+        id: publish_release
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           files: all-artifacts/**
           generate_release_notes: true
+
+      - name: Fallback notice when publish is blocked
+        if: steps.publish_release.outcome != 'success'
+        run: |
+          echo "::warning::Release publishing was blocked (commonly due usage/rate limits), but binaries were built and are available as workflow artifacts."
+          echo "::warning::Download artifacts from this run and attach them to the GitHub Release manually once limits reset."
