@@ -12,9 +12,9 @@
   "scripts": {
     "start": "electron .",
     "dist:linux": "electron-builder --linux AppImage deb",
-    "dist:win": "electron-builder --win nsis portable",
+    "dist:win": "electron-builder --win nsis zip",
     "dist:mac": "electron-builder --mac dmg zip",
-    "dist:all": "electron-builder --linux AppImage deb --win nsis portable --mac dmg zip"
+    "dist:all": "electron-builder --linux AppImage deb --win nsis zip --mac dmg zip"
   },
   "devDependencies": {
     "electron": "^25.9.8",
@@ -53,7 +53,7 @@
     "win": {
       "target": [
         "nsis",
-        "portable"
+        "zip"
       ]
     },
     "mac": {
