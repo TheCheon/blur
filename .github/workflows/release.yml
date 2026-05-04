@@ -48,8 +48,10 @@ jobs:
         run: ${{ matrix.cmd }}
 
       - name: Clean up build artifacts
+        shell: bash
         run: |
-          rm -rf release/linux-unpacked release/*.yml release/*.yaml 2>/dev/null || true
+          rm -rf release/linux-unpacked 2>/dev/null || true
+          rm -f release/*.yml release/*.yaml release/*.blockmap 2>/dev/null || true
           echo "Cleaned build artifacts. Remaining files:"
           ls -lh release/ || echo "release/ is empty"
 

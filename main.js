@@ -6,6 +6,13 @@ const http = require('http');
 const { nativeImage } = require('electron');
 const crypto = require('crypto');
 
+// Some Linux environments block the setuid sandbox in AppImage builds.
+// These flags keep the app launchable in those environments.
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('no-sandbox');
+  app.commandLine.appendSwitch('disable-setuid-sandbox');
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1100,
