@@ -50,7 +50,7 @@ jobs:
       - name: Clean up build artifacts
         shell: bash
         run: |
-          rm -rf release/linux-unpacked 2>/dev/null || true
+          rm -rf release/*-unpacked 2>/dev/null || true
           rm -f release/*.yml release/*.yaml release/*.blockmap 2>/dev/null || true
           echo "Cleaned build artifacts. Remaining files:"
           ls -lh release/ || echo "release/ is empty"
@@ -59,31 +59,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.os }}
-          path: release/*
+          path: |
+            release/*.AppImage
+            release/*.deb
+            release/*.exe
+            release/*.dmg
+            release/*.zip
           if-no-files-found: error
-
-  publish:
-    name: Publish GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: all-artifacts
-
-      - name: Publish release assets
-        id: publish_release
-        continue-on-error: true
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          files: all-artifacts/**
-          generate_release_notes: true
-
-      - name: Fallback notice when publish is blocked
-        if: steps.publish_release.outcome != 'success'
-        run: |
-          echo "::warning::Release publishing was blocked (commonly due usage/rate limits), but binaries were built and are available as workflow artifacts."
-          echo "::warning::Download artifacts from this run and attach them to the GitHub Release manually once limits reset."
