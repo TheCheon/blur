@@ -25,7 +25,8 @@
     "productName": "Blur Faces",
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "."
     },
     "files": [
       "index.html",
@@ -33,8 +34,15 @@
       "main.js",
       "preload.js",
       "style.css",
-      "package.json"
+      "app.py",
+      "retina_mask.py",
+      "requirements.txt",
+      "package.json",
+      "node_modules/**/*"
     ],
+    "extraMetadata": {
+      "name": "blur"
+    },
     "linux": {
       "target": [
         "AppImage",
